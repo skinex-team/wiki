@@ -1,93 +1,66 @@
-# Wiki
+# wiki
 
+Сервис редких паттернов скинов CS2 (бывший pattern-service). Заливает Redis данными из `patterns/*.json` (Steam-гайды) и отдает их через REST/gRPC для тултипов на карточках лотов.
 
+## Источник данных
+- `AK-47 | Aphrodite` — `steamcommunity.com/sharedfiles/filedetails/?id=3651356503` автор `korenevskiy` (110k просмотров, primary source для white.market/CS.MONEY/SkinBaron). Сверен с `white.market/blog/guides/ak-47-aphrodite-pattern-guide-every-rare-pattern-explained`.
 
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
+## REST API
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/skinex-team/wiki.git
-git branch -M main
-git push -uf origin main
+GET /api/patterns/skins                          -> ["AK-47 | Aphrodite"]
+GET /api/patterns?skin=AK-47%20|%20Aphrodite&seed=904&float=0.02  -> PatternInfo | 204
+GET /api/patterns/has-features?skin=...          -> {hasFeatures:bool}
+POST /api/patterns/batch  [{skin, seed}]         -> [{skin, seed, category...}|{hasFeatures:false}]
+GET /api/patterns/skin/{marketHashName}          -> SkinPatterns (полный тир-лист)
+GET /api/admin/patterns/stats                    -> stats
+POST /api/admin/patterns/reload  (X-SteamId: ADMIN_STEAM_ID) -> перезаливка Redis
 ```
 
-## Integrate with your tools
+`204 No Content` = у скина нет особенностей → фронт НЕ показывает тултип (требование).
 
-* [Set up project integrations](https://gitlab.com/skinex-team/wiki/-/settings/integrations)
+## Redis схема
+```
+pattern:info:{normalizedSkin}:{seed} -> JSON PatternInfo
+pattern:skin:{normalizedSkin}        -> JSON SkinPatterns
+pattern:skins                        -> JSON ["ak-47 | aphrodite"]
+pattern:skins:set                    -> SET для SISMEMBER
+pattern:meta:version                 -> timestamp
+```
+`SPRING_DATA_REDIS_HOST=redis:6379` (k8s), локально `localhost:6379`. TTL=0 (бессрочно, перезаливается при старте). Fallback — in-memory реестр если Redis недоступен.
 
-## Collaborate with your team
+## gRPC
+Прото `src/main/proto/pattern_service.proto` (порт 9091):
+```
+GetPatternInfo, HasFeatures, ListSkins, GetSkinPatterns
+```
+Для сервер-сервер интеграции (p2p-market, quick-deals, private-deals, p2p-trade) если нужно считать оверпрайс на бэке.
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+## Фронт интеграция
+- `frontend/lib/pattern-api.ts` — fetch с кэшем + batch
+- `frontend/components/common/pattern-badge.tsx` — `<PatternBadge marketHashName={name} paintSeed={seed} floatValue={float} />`
+  Показывается только если `204` не вернулся. Цвет по категории, ★ для Best, Tier + rank, тултип с описанием и floatHint.
+- Уже встроен в `app/market/item/[name]/lot-card.tsx:206` и `app/quick-trade/components/trade-card.tsx:103`
+- Для остальных карточек (p2p-trade, private-deals, inventory) — аналогично:
+  ```tsx
+  import { PatternBadge } from "@/components/common/pattern-badge";
+  <PatternBadge marketHashName={item.name} paintSeed={item.paintSeed} floatValue={item.floatValue} compact />
+  ```
+  Для гридов использовать `usePatternBatch` чтобы за 1 запрос проверить N лотов.
 
-## Test and Deploy
+## Добавление нового скина
+1. Создать `src/main/resources/patterns/<normalized>.json` по образцу `ak-47-aphrodite.json`
+2. `POST /api/admin/patterns/reload` или рестарт пода
+3. Проверить `GET /api/patterns/skins` и `GET /api/patterns?skin=...&seed=...`
 
-Use the built-in continuous integration in GitLab.
+## Деплой
+- `skinex-ci/k8s/base/services/wiki.yaml` + `ingress.yaml` (`/api/patterns`, `/api/admin/patterns` → service `wiki:8091`)
+- `skinex-ci/k8s/base/configmap-common-env.yaml` + `overlays/prod/configmap-common-env.env` добавляют `WIKI_GRPC=static://wiki:9091`
+- `frontend/Jenkinsfile` + `Dockerfile` добавляют `NEXT_PUBLIC_PATTERN_SERVICE_URL`
+- Порты: REST 8091, gRPC 9091
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+## Build & Test
+```
+./gradlew test
+./gradlew bootJar
+docker build -t registry.gitlab.com/skinex-team/wiki:latest .
+```

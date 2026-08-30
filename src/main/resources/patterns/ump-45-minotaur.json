@@ -1,0 +1,53 @@
+{
+  "skin": "UMP-45 | Minotaur's Labyrinth",
+  "marketHashName": "UMP-45 | Minotaur's Labyrinth",
+  "normalizedName": "ump-45 | minotaur's labyrinth",
+  "source": "generated: community canon (steamanalyst, csgoskins.gg, pricempire, skin.land, pattern.wiki)",
+  "author": "pattern-service generator",
+  "updated": "2026-08-27",
+  "categories": {
+    "centered_minotaur": {
+      "label": "Centered Minotaur",
+      "labelRu": "Минотавр в центре",
+      "description": "Минотавр точно над спуском, Tier1 9 341 337..., Tier2 354...",
+      "best": [
+        9,
+        341,
+        337
+      ],
+      "tier1": [
+        9,
+        341,
+        337,
+        256,
+        195,
+        83,
+        1000,
+        942,
+        778,
+        733,
+        526,
+        524,
+        513
+      ],
+      "tier2": [
+        354,
+        348,
+        332,
+        313,
+        296,
+        273,
+        265,
+        226,
+        191,
+        176,
+        120,
+        25,
+        982,
+        980,
+        901,
+        857
+      ]
+    }
+  }
+}

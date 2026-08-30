@@ -1,0 +1,136 @@
+{
+  "skin": "★ M9 Bayonet | Gamma Doppler",
+  "marketHashName": "★ M9 Bayonet | Gamma Doppler",
+  "normalizedName": "★ m9 bayonet | gamma doppler",
+  "source": "generated: community canon (steamanalyst, csgoskins.gg, pricempire, skin.land, pattern.wiki)",
+  "author": "pattern-service generator",
+  "updated": "2026-08-27",
+  "categories": {
+    "ruby": {
+      "label": "Ruby",
+      "labelRu": "Рубин",
+      "description": "Полностью красный, 10-20x к базе, paint index 415",
+      "tier": 1,
+      "isBest": true
+    },
+    "sapphire": {
+      "label": "Sapphire",
+      "labelRu": "Сапфир",
+      "description": "Полностью синий, 15-30x, paint index 416",
+      "tier": 1,
+      "isBest": true
+    },
+    "black_pearl": {
+      "label": "Black Pearl",
+      "labelRu": "Черная жемчужина",
+      "description": "Темно-фиолетовый иридий, 8-15x, paint index 417, самый редкий",
+      "tier": 1,
+      "isBest": true
+    },
+    "phase2": {
+      "label": "Phase 2",
+      "labelRu": "Фаза 2",
+      "description": "Розово-фиолетовый, самый дорогой из стандартных +10-30% к P1",
+      "tier": 2
+    },
+    "phase4": {
+      "label": "Phase 4",
+      "labelRu": "Фаза 4",
+      "description": "Сине-черный",
+      "tier": 3
+    },
+    "phase1": {
+      "label": "Phase 1",
+      "labelRu": "Фаза 1",
+      "description": "Черно-розовый, базовый",
+      "tier": 4
+    },
+    "phase3": {
+      "label": "Phase 3",
+      "labelRu": "Фаза 3",
+      "description": "Зелено-синий, наименее популярный",
+      "tier": 5
+    },
+    "fake_black_pearl_p1": {
+      "label": "Fake Black Pearl P1",
+      "labelRu": "Фейк черная жемчужина P1",
+      "description": "P1 без розового на playside, выглядит как Black Pearl. Bayonet T1 26 сидов (441 321...), Karambit T1 41 сид (314...) — внутри каждой модели свои топы.",
+      "best": [
+        441,
+        321
+      ],
+      "tier1": [
+        441,
+        321,
+        972,
+        192,
+        212,
+        312,
+        484,
+        764,
+        784,
+        484,
+        490,
+        519,
+        534,
+        454,
+        455,
+        864,
+        575,
+        708,
+        711,
+        739,
+        772,
+        784,
+        855,
+        862,
+        883,
+        890
+      ],
+      "tier2": [
+        397,
+        577,
+        83,
+        115,
+        159,
+        186,
+        237,
+        244,
+        263,
+        279,
+        306,
+        317,
+        349,
+        352,
+        355,
+        371,
+        383,
+        398,
+        408,
+        410,
+        434,
+        469,
+        472,
+        497,
+        502,
+        510,
+        523,
+        560,
+        603,
+        650,
+        679,
+        684,
+        694,
+        720,
+        731,
+        871,
+        927,
+        192,
+        692,
+        792,
+        839,
+        986
+      ]
+    }
+  }
+}

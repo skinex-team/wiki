@@ -1,0 +1,221 @@
+{
+  "skin": "★ Talon Knife | Marble Fade",
+  "marketHashName": "★ Talon Knife | Marble Fade",
+  "normalizedName": "★ talon knife | marble fade",
+  "source": "generated: community canon (steamanalyst, csgoskins.gg, pricempire, skin.land, pattern.wiki)",
+  "author": "pattern-service generator",
+  "updated": "2026-08-27",
+  "categories": {
+    "1st_max": {
+      "label": "Fire & Ice",
+      "labelRu": "Огонь и лед",
+      "description": "1st Max",
+      "tier1": [
+        763
+      ],
+      "best": [
+        763
+      ]
+    },
+    "2nd_max": {
+      "label": "Fire & Ice",
+      "labelRu": "Огонь и лед",
+      "description": "2nd Max",
+      "tier2": [
+        575,
+        897,
+        636,
+        341,
+        93,
+        403,
+        910,
+        468,
+        326,
+        961
+      ]
+    },
+    "3rd_max": {
+      "label": "Fire & Ice",
+      "labelRu": "Огонь и лед",
+      "description": "3rd Max",
+      "tier3": [
+        520,
+        87,
+        911,
+        521,
+        651,
+        41,
+        348,
+        527,
+        601,
+        714
+      ]
+    },
+    "4th_max": {
+      "label": "Fire & Ice",
+      "labelRu": "Огонь и лед",
+      "description": "4th Max",
+      "tier4": [
+        807,
+        205,
+        892,
+        742,
+        668,
+        583,
+        944,
+        576,
+        34,
+        256
+      ]
+    },
+    "5th_max": {
+      "label": "Fire & Ice",
+      "labelRu": "Огонь и лед",
+      "description": "5th Max",
+      "tier5": [
+        848,
+        975,
+        648,
+        422,
+        834,
+        105,
+        550,
+        943,
+        925,
+        664,
+        517,
+        571,
+        380
+      ]
+    },
+    "6th_max": {
+      "label": "Fire & Ice",
+      "labelRu": "Огонь и лед",
+      "description": "6th Max",
+      "tier6": [
+        449,
+        494,
+        577,
+        201,
+        747,
+        825,
+        981,
+        824,
+        399,
+        936,
+        800,
+        107,
+        428,
+        147,
+        745
+      ]
+    },
+    "7th_max": {
+      "label": "Fire & Ice",
+      "labelRu": "Огонь и лед",
+      "description": "7th Max",
+      "tier7": [
+        872,
+        396,
+        793,
+        856,
+        754,
+        150,
+        914,
+        639,
+        345,
+        486,
+        278,
+        956,
+        827,
+        29,
+        751,
+        690,
+        375,
+        224,
+        968,
+        395,
+        84,
+        840
+      ]
+    },
+    "8th_max": {
+      "label": "Fire & Ice",
+      "labelRu": "Огонь и лед",
+      "description": "8th Max",
+      "tier8": [
+        781,
+        849,
+        46,
+        599,
+        789,
+        236,
+        657,
+        465,
+        11,
+        141,
+        401,
+        137,
+        838,
+        308
+      ]
+    },
+    "9th_max": {
+      "label": "Fire & Ice",
+      "labelRu": "Огонь и лед",
+      "description": "9th Max",
+      "tier9": [
+        703,
+        455,
+        712,
+        136,
+        597,
+        917,
+        313,
+        482,
+        726,
+        80,
+        358,
+        314,
+        608,
+        181,
+        435,
+        229,
+        881,
+        640,
+        572,
+        813,
+        462
+      ]
+    },
+    "10th_max": {
+      "label": "Fire & Ice",
+      "labelRu": "Огонь и лед",
+      "description": "10th Max",
+      "tier10": [
+        447,
+        172,
+        223,
+        173,
+        64,
+        891,
+        43,
+        130,
+        759,
+        249,
+        145,
+        566,
+        466,
+        940,
+        665,
+        514,
+        511,
+        283,
+        381,
+        21,
+        282,
+        211
+      ]
+    }
+  }
+}

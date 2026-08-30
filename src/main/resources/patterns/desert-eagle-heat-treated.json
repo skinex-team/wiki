@@ -1,0 +1,67 @@
+{
+  "skin": "Desert Eagle | Heat Treated",
+  "marketHashName": "Desert Eagle | Heat Treated",
+  "normalizedName": "desert eagle | heat treated",
+  "source": "generated: community canon (steamanalyst, csgoskins.gg, pricempire, skin.land, pattern.wiki)",
+  "author": "pattern-service generator",
+  "updated": "2026-08-27",
+  "categories": {
+    "blue_gem": {
+      "label": "Blue Gem",
+      "labelRu": "Синий гем",
+      "description": "Heat Treated аналог Case Hardened, #490 — вершина (90% синего), #2 148 69 704",
+      "best": [
+        490
+      ],
+      "tier1": [
+        490
+      ],
+      "tier2": [
+        148,
+        69,
+        704
+      ],
+      "tier3": [
+        16,
+        48,
+        66,
+        67,
+        96,
+        111,
+        117,
+        159,
+        259,
+        263,
+        273,
+        297,
+        308,
+        321,
+        324,
+        341,
+        347,
+        370,
+        426,
+        461,
+        482,
+        517,
+        530,
+        567,
+        587,
+        674,
+        695,
+        723,
+        764,
+        772,
+        781,
+        790,
+        792,
+        843,
+        880,
+        885,
+        904,
+        948,
+        990
+      ]
+    }
+  }
+}

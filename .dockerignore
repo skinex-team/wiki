@@ -1,0 +1,9 @@
+.git
+.gitignore
+.gradle
+out/
+.idea/
+*.iml
+.DS_Store
+*.log
+.env

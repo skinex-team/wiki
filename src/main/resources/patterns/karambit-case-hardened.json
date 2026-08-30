@@ -1,0 +1,65 @@
+{
+  "skin": "★ Karambit | Case Hardened",
+  "marketHashName": "★ Karambit | Case Hardened",
+  "normalizedName": "★ karambit | case hardened",
+  "source": "generated: community canon (steamanalyst, csgoskins.gg, pricempire, skin.land, pattern.wiki)",
+  "author": "pattern-service generator",
+  "updated": "2026-08-27",
+  "categories": {
+    "blue_gem": {
+      "label": "Blue Gem",
+      "labelRu": "Синий гем",
+      "description": "Blue Gem ★ Karambit | Case Hardened",
+      "best": [
+        387
+      ],
+      "tier0": [
+        387
+      ],
+      "tier1": [
+        73,
+        269,
+        321,
+        442,
+        507,
+        776,
+        853,
+        902,
+        955
+      ],
+      "tier2": [
+        4,
+        74,
+        82,
+        130,
+        179,
+        182,
+        273,
+        282,
+        341,
+        375,
+        377,
+        453,
+        470,
+        494,
+        510,
+        541,
+        661,
+        664,
+        670,
+        698,
+        713,
+        721,
+        798,
+        809,
+        823,
+        828,
+        838,
+        868,
+        891,
+        905,
+        917
+      ]
+    }
+  }
+}

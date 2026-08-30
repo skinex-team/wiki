@@ -1,0 +1,38 @@
+{
+  "skin": "MAC-10 | Case Hardened",
+  "marketHashName": "MAC-10 | Case Hardened",
+  "normalizedName": "mac-10 | case hardened",
+  "source": "generated: community canon (steamanalyst, csgoskins.gg, pricempire, skin.land, pattern.wiki)",
+  "author": "pattern-service generator",
+  "updated": "2026-08-27",
+  "categories": {
+    "blue_gem": {
+      "label": "Blue Gem",
+      "labelRu": "Синий гем",
+      "description": "Blue Gem MAC-10 | Case Hardened",
+      "tier1": [
+        239,
+        349,
+        406,
+        503,
+        667
+      ],
+      "tier2": [
+        80,
+        195,
+        199,
+        251,
+        292,
+        315,
+        345,
+        381,
+        400,
+        414,
+        475,
+        598,
+        807,
+        972
+      ]
+    }
+  }
+}

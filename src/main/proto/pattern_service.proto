@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package com.skinex.pattern.grpc.proto;
+
+option java_multiple_files = true;
+option java_package = "com.skinex.pattern.grpc.proto";
+option java_outer_classname = "PatternServiceProto";
+
+service PatternService {
+  rpc GetPatternInfo (GetPatternInfoRequest) returns (GetPatternInfoReply);
+  rpc HasFeatures (HasFeaturesRequest) returns (HasFeaturesReply);
+  rpc ListSkins (ListSkinsRequest) returns (ListSkinsReply);
+  rpc GetSkinPatterns (GetSkinPatternsRequest) returns (GetSkinPatternsReply);
+}
+
+message GetPatternInfoRequest {
+  string skin = 1; // marketHashName, e.g. "AK-47 | Aphrodite"
+  int32 seed = 2;  // 0..1000
+  double float_value = 3; // optional, 0 if not set
+}
+
+message GetPatternInfoReply {
+  bool found = 1;
+  bool has_features = 2;
+  string skin = 3;
+  string normalized_skin = 4;
+  int32 seed = 5;
+  string category = 6; // pink_gem etc
+  string category_label = 7;
+  string category_label_ru = 8;
+  int32 tier = 9;
+  int32 rank = 10;
+  bool is_best = 11;
+  string display_name = 12;
+  string description = 13;
+  string float_hint = 14;
+}
+
+message HasFeaturesRequest {
+  string skin = 1;
+}
+message HasFeaturesReply {
+  bool has_features = 1;
+  string skin = 2;
+}
+
+message ListSkinsRequest {}
+message ListSkinsReply {
+  repeated string skins = 1;
+  repeated string skins_normalized = 2;
+}
+
+message GetSkinPatternsRequest {
+  string skin = 1;
+}
+message GetSkinPatternsReply {
+  bool found = 1;
+  string skin = 2;
+  string json = 3; // полный SkinPatterns как JSON (для простоты)
+}

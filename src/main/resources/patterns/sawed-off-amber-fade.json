@@ -1,0 +1,45 @@
+{
+  "skin": "Sawed-Off | Amber Fade",
+  "marketHashName": "Sawed-Off | Amber Fade",
+  "normalizedName": "sawed-off | amber fade",
+  "source": "generated: community canon (steamanalyst, csgoskins.gg, pricempire, skin.land, pattern.wiki)",
+  "author": "pattern-service generator",
+  "updated": "2026-08-27",
+  "categories": {
+    "fade": {
+      "label": "Fade",
+      "labelRu": "Фейд",
+      "description": "Градиент, точный процент на сид. 100% — вершина.",
+      "percentage": "80-100%",
+      "tier1": [
+        16,
+        129,
+        146,
+        152,
+        241,
+        281,
+        292,
+        332,
+        344,
+        359,
+        393,
+        412,
+        541,
+        602,
+        628,
+        649,
+        673,
+        688,
+        701,
+        743,
+        777,
+        792,
+        918,
+        994
+      ],
+      "tier2": [],
+      "tier3": [],
+      "tier4": []
+    }
+  }
+}

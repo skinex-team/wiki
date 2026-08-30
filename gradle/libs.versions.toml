@@ -1,0 +1,41 @@
+[versions]
+spring-boot = "3.4.4"
+junit-jupiter = "5.11.4"
+cucumber = "7.21.0"
+rest-assured = "5.5.0"
+selenide = "7.5.1"
+awaitility = "4.2.2"
+webdrivermanager = "5.9.2"
+jjwt = "0.12.6"
+ecs-logging = "1.8.0"
+
+[libraries]
+spring-retry = { module = "org.springframework.retry:spring-retry" }
+spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
+spring-boot-starter-thymeleaf = { module = "org.springframework.boot:spring-boot-starter-thymeleaf" }
+spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+spring-boot-starter-websocket = { module = "org.springframework.boot:spring-boot-starter-websocket" }
+spring-session-jdbc = { module = "org.springframework.session:spring-session-jdbc" }
+h2-database = { module = "com.h2database:h2" }
+postgresql = { module = "org.postgresql:postgresql" }
+liquibase-core = { module = "org.liquibase:liquibase-core" }
+liquibase-groovy = { module = "org.liquibase:liquibase-groovy-dsl" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
+cucumber-java = { module = "io.cucumber:cucumber-java", version.ref = "cucumber" }
+cucumber-spring = { module = "io.cucumber:cucumber-spring", version.ref = "cucumber" }
+cucumber-junit-platform-engine = { module = "io.cucumber:cucumber-junit-platform-engine", version.ref = "cucumber" }
+junit-platform-suite = { module = "org.junit.platform:junit-platform-suite", version = "1.11.4" }
+rest-assured = { module = "io.rest-assured:rest-assured", version.ref = "rest-assured" }
+rest-assured-json-path = { module = "io.rest-assured:json-path", version.ref = "rest-assured" }
+selenide = { module = "com.codeborne:selenide", version.ref = "selenide" }
+awaitility = { module = "org.awaitility:awaitility", version.ref = "awaitility" }
+webdrivermanager = { module = "io.github.bonigarcia:webdrivermanager", version.ref = "webdrivermanager" }
+jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
+jjwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jjwt" }
+jjwt-jackson = { module = "io.jsonwebtoken:jjwt-jackson", version.ref = "jjwt" }
+logback-ecs-encoder = { module = "co.elastic.logging:logback-ecs-encoder", version.ref = "ecs-logging" }
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+spring-dependency-management = { id = "io.spring.dependency-management", version = "1.1.7" }

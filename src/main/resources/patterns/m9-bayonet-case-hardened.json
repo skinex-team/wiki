@@ -1,0 +1,67 @@
+{
+  "skin": "★ M9 Bayonet | Case Hardened",
+  "marketHashName": "★ M9 Bayonet | Case Hardened",
+  "normalizedName": "★ m9 bayonet | case hardened",
+  "source": "generated: community canon (steamanalyst, csgoskins.gg, pricempire, skin.land, pattern.wiki)",
+  "author": "pattern-service generator",
+  "updated": "2026-08-27",
+  "categories": {
+    "blue_gem": {
+      "label": "Blue Gem",
+      "labelRu": "Синий гем",
+      "description": "Blue Gem ★ M9 Bayonet | Case Hardened",
+      "best": [
+        601
+      ],
+      "tier0": [
+        601
+      ],
+      "tier1": [
+        58,
+        107,
+        150,
+        239,
+        253,
+        349,
+        354,
+        403,
+        406,
+        417,
+        449,
+        503,
+        517,
+        523,
+        550,
+        585,
+        634,
+        675,
+        897,
+        946
+      ],
+      "tier2": [
+        21,
+        91,
+        117,
+        166,
+        167,
+        202,
+        224,
+        269,
+        281,
+        288,
+        336,
+        346,
+        355,
+        366,
+        430,
+        613,
+        628,
+        715,
+        793,
+        813,
+        867,
+        880
+      ]
+    }
+  }
+}
