@@ -45,32 +45,145 @@ public class PatternRegistry {
     }
 
     public synchronized int loadAll() {
+        return loadAll("classpath:patterns/*.json");
+    }
+
+    /**
+     * Перезагружает все файлы по паттерну (в тестах — file: на временную папку).
+     * Битый/невалидный файл не роняет загрузку остальных: логируем WARNING и пропускаем.
+     */
+    synchronized int loadAll(String locationPattern) {
         skinsByNormalized.clear();
         index.clear();
         int files = 0;
+        int skipped = 0;
         try {
             PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-            Resource[] resources = resolver.getResources("classpath:patterns/*.json");
+            Resource[] resources = resolver.getResources(locationPattern);
             for (Resource r : resources) {
+                String filename = r.getFilename();
                 try (InputStream is = r.getInputStream()) {
                     SkinPatterns sp = mapper.readValue(is, SkinPatterns.class);
+                    Validation v = validate(filename, sp);
+                    v.problems().forEach(p -> log.warn("Pattern file {}: {}", filename, p));
+                    if (v.fatal()) {
+                        skipped++;
+                        log.warn("Pattern file {} skipped (fatal validation problems)", filename);
+                        continue;
+                    }
                     String norm = normalize(sp.marketHashName() != null ? sp.marketHashName() : sp.skin());
                     // переопределяем normalizedName на каноничный
                     skinsByNormalized.put(norm, sp);
                     buildIndex(norm, sp);
                     files++;
-                    log.info("Loaded patterns for {} ({} categories) from {}", sp.skin(), sp.categories() != null ? sp.categories().size() : 0, r.getFilename());
+                    log.info("Loaded patterns for {} ({} categories) from {}", sp.skin(), sp.categories() != null ? sp.categories().size() : 0, filename);
                 } catch (Exception e) {
-                    log.error("Failed to load pattern file {}: {}", r.getFilename(), e.getMessage(), e);
+                    skipped++;
+                    log.error("Failed to load pattern file {}: {}", filename, e.getMessage(), e);
                 }
             }
         } catch (Exception e) {
-            log.error("Failed to scan patterns/*.json: {}", e.getMessage(), e);
+            log.error("Failed to scan {}: {}", locationPattern, e.getMessage(), e);
         }
         skinList = List.copyOf(new TreeSet<>(skinsByNormalized.keySet()));
         // Также добавляем исходные marketHashName для удобства
         log.info("PatternRegistry loaded {} skins: {}", skinsByNormalized.size(), skinList);
+        // Сводка покрытия: сколько файлов/скинов/сидов реально в индексе
+        log.info("PatternRegistry load summary: files loaded={}, skins indexed={}, total seeds indexed={}, files skipped={}",
+                files, skinsByNormalized.size(), totalIndexedSeeds(), skipped);
         return files;
+    }
+
+    /**
+     * Результат валидации одного файла паттернов.
+     * fatal=true — файл пропускаем целиком (нет marketHashName или categories).
+     */
+    record Validation(boolean fatal, List<String> problems) {}
+
+    /**
+     * Проверяет распарсенный файл, ничего не бросает — возвращает список проблем для WARNING-лога.
+     * Дубликаты сидов только репортим: рантайм-контракт buildIndex — first write wins.
+     */
+    Validation validate(String filename, SkinPatterns sp) {
+        List<String> problems = new ArrayList<>();
+        if (sp.marketHashName() == null || sp.marketHashName().isBlank()) {
+            problems.add("missing marketHashName");
+            return new Validation(true, problems);
+        }
+        if (sp.categories() == null || sp.categories().isEmpty()) {
+            problems.add("missing or empty categories");
+            return new Validation(true, problems);
+        }
+
+        // Опечатки в ключах категорий: "tire_" вместо "tier_" и двойное подчёркивание
+        List<String> tireKeys = sp.categories().keySet().stream().filter(k -> k.contains("tire_")).toList();
+        if (!tireKeys.isEmpty()) {
+            problems.add("category keys contain 'tire_' typo (should be 'tier_'): " + tireKeys);
+        }
+        List<String> duKeys = sp.categories().keySet().stream().filter(k -> k.contains("__")).toList();
+        if (!duKeys.isEmpty()) {
+            problems.add("category keys contain double underscore: " + duKeys);
+        }
+
+        // gamma-doppler — это emerald + phase1..4; ruby/sapphire/black_pearl там из обычного doppler
+        if (filename != null && filename.contains("gamma-doppler")) {
+            List<String> wrong = List.of("ruby", "sapphire", "black_pearl", "fake_black_pearl_p1").stream()
+                    .filter(sp.categories()::containsKey).toList();
+            if (!wrong.isEmpty()) {
+                problems.add("gamma-doppler file contains doppler gem categories instead of emerald: " + wrong);
+            }
+        }
+
+        // Сиды: диапазон 0..1000 и дубликаты между листами внутри категории
+        for (Map.Entry<String, SkinPatterns.CategoryDef> e : sp.categories().entrySet()) {
+            String catKey = e.getKey();
+            SkinPatterns.CategoryDef cd = e.getValue();
+            if (cd == null) continue;
+            Map<Integer, List<String>> occurrences = new LinkedHashMap<>();
+            List<String> outOfRange = new ArrayList<>();
+            for (Map.Entry<String, List<Integer>> list : seedLists(cd).entrySet()) {
+                for (Integer seed : list.getValue()) {
+                    if (seed == null) continue;
+                    occurrences.computeIfAbsent(seed, k -> new ArrayList<>()).add(list.getKey());
+                    if (seed < 0 || seed > 1000) {
+                        outOfRange.add(seed + " in " + list.getKey());
+                    }
+                }
+            }
+            List<String> dups = occurrences.entrySet().stream()
+                    .filter(en -> en.getValue().size() > 1)
+                    .map(en -> en.getKey() + " in " + en.getValue())
+                    .toList();
+            if (!dups.isEmpty()) {
+                problems.add("duplicate seeds across lists in category '" + catKey + "': " + dups);
+            }
+            if (!outOfRange.isEmpty()) {
+                problems.add("seeds out of range 0..1000 in category '" + catKey + "': " + outOfRange);
+            }
+        }
+        return new Validation(false, problems);
+    }
+
+    /** Все сид-листы категории (best/all/all_desc/tier0..tier10/excluded), без null. */
+    static Map<String, List<Integer>> seedLists(SkinPatterns.CategoryDef cd) {
+        Map<String, List<Integer>> lists = new LinkedHashMap<>();
+        lists.put("best", cd.best());
+        lists.put("all", cd.all());
+        lists.put("all_desc", cd.all_desc());
+        lists.put("tier0", cd.tier0());
+        lists.put("tier1", cd.tier1());
+        lists.put("tier2", cd.tier2());
+        lists.put("tier3", cd.tier3());
+        lists.put("tier4", cd.tier4());
+        lists.put("tier5", cd.tier5());
+        lists.put("tier6", cd.tier6());
+        lists.put("tier7", cd.tier7());
+        lists.put("tier8", cd.tier8());
+        lists.put("tier9", cd.tier9());
+        lists.put("tier10", cd.tier10());
+        lists.put("excluded", cd.excluded());
+        lists.values().removeIf(Objects::isNull);
+        return lists;
     }
 
     private void buildIndex(String norm, SkinPatterns sp) {

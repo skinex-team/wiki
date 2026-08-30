@@ -25,6 +25,9 @@ public record SkinPatterns(
             String labelRu,
             String description,
             String percentage,
+            Integer tier,       // для категорий без сид-листов (doppler/gamma-doppler фазы): 1 = самая ценная
+            Boolean isBest,     // для категорий без сид-листов: редчайшая разновидность (ruby/sapphire/emerald)
+            String note,        // произвольная заметка к категории
             List<Integer> best,
             List<Integer> all,
             List<Integer> all_desc,

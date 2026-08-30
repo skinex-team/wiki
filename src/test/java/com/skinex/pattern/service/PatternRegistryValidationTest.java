@@ -1,0 +1,179 @@
+package com.skinex.pattern.service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.skinex.pattern.config.ObjectMapperConfig;
+import com.skinex.pattern.model.SkinPatterns;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class PatternRegistryValidationTest {
+
+    private final ObjectMapper mapper = new ObjectMapperConfig().objectMapper();
+
+    private PatternRegistry loadReal() {
+        PatternRegistry reg = new PatternRegistry(mapper);
+        reg.loadAll();
+        return reg;
+    }
+
+    private SkinPatterns readClasspath(String path) throws Exception {
+        try (InputStream is = new PathMatchingResourcePatternResolver()
+                .getResource("classpath:" + path).getInputStream()) {
+            return mapper.readValue(is, SkinPatterns.class);
+        }
+    }
+
+    @Test
+    void dopplerCategoriesRetainTierIsBestNote() throws Exception {
+        PatternRegistry reg = loadReal();
+        SkinPatterns sp = reg.getSkin("★ Bayonet | Doppler").orElseThrow();
+        Map<String, SkinPatterns.CategoryDef> cats = sp.categories();
+        // gem-категории без сид-листов: tier/isBest должны доехать до модели
+        for (String gem : List.of("ruby", "sapphire", "black_pearl")) {
+            SkinPatterns.CategoryDef c = cats.get(gem);
+            assertNotNull(c, gem);
+            assertEquals(1, c.tier(), gem + " tier");
+            assertEquals(Boolean.TRUE, c.isBest(), gem + " isBest");
+        }
+        assertEquals(4, cats.get("phase1").tier());
+        assertEquals(2, cats.get("phase2").tier());
+        assertEquals(5, cats.get("phase3").tier());
+        assertEquals(3, cats.get("phase4").tier());
+        assertNull(cats.get("phase1").isBest(), "isBest не задан у phase1");
+
+        // note — сохраняется (ножевые case-hardened файлы)
+        SkinPatterns ch = reg.getSkin("★ Flip Knife | Case Hardened").orElseThrow();
+        assertNotNull(ch.categories().get("blue_gem").note());
+
+        // /api/patterns/skin/{name} сериализует SkinPatterns напрямую — поля должны быть в JSON
+        String json = mapper.writeValueAsString(cats.get("ruby"));
+        assertTrue(json.contains("\"tier\":1"), json);
+        assertTrue(json.contains("\"isBest\":true"), json);
+    }
+
+    @Test
+    void malformedFileSkippedOthersLoad(@TempDir Path tmp) throws Exception {
+        Files.writeString(tmp.resolve("good.json"), """
+                {"skin":"Test | Good","marketHashName":"Test | Good",
+                 "categories":{"blue_gem":{"label":"Blue Gem","best":[1],"tier1":[2,3]}}}
+                """);
+        Files.writeString(tmp.resolve("bad.json"), """
+                {"skin":"Test | Bad","categories":{"x":{"label":"X","tier1":[1]}}}
+                """);
+        PatternRegistry reg = new PatternRegistry(mapper);
+        int files = reg.loadAll("file:" + tmp.toAbsolutePath() + "/*.json");
+        assertEquals(1, files, "должен загрузиться только good.json");
+        assertTrue(reg.getSkin("Test | Good").isPresent());
+        assertTrue(reg.getSkin("Test | Bad").isEmpty(), "файл без marketHashName пропускается");
+        assertTrue(reg.listSkinsNormalized().contains("test | good"));
+
+        // validate() помечает отсутствие marketHashName как fatal
+        SkinPatterns bad;
+        try (InputStream is = Files.newInputStream(tmp.resolve("bad.json"))) {
+            bad = mapper.readValue(is, SkinPatterns.class);
+        }
+        PatternRegistry.Validation v = reg.validate("bad.json", bad);
+        assertTrue(v.fatal());
+        assertTrue(v.problems().stream().anyMatch(p -> p.contains("marketHashName")), v.problems().toString());
+    }
+
+    @Test
+    void firstWriteWinsBestBeatsTier() {
+        PatternRegistry reg = loadReal();
+        // bayonet-doppler fake_black_pearl_p1: best зеркалит tier1 (реальные сиды pricempire, первый — 44)
+        var pi = reg.get("★ Bayonet | Doppler", 44).orElseThrow();
+        assertEquals("fake_black_pearl_p1", pi.category());
+        assertTrue(pi.isBest());
+        assertEquals(1, pi.rank());
+        assertEquals(1, pi.tier());
+
+        // AK CH 661 — в best и в tier0; best индексируется первым => isBest, tier 1 (а не 0)
+        var ak = reg.get("AK-47 | Case Hardened", 661).orElseThrow();
+        assertTrue(ak.isBest());
+        assertEquals(1, ak.tier());
+    }
+
+    @Test
+    void validationReportsDuplicatesAndKnownDataIssues() throws Exception {
+        PatternRegistry reg = new PatternRegistry(mapper);
+
+        // 72 shipped-файла имеют дубликаты — это репортим, а не падаем (first write wins)
+        SkinPatterns doppler = readClasspath("patterns/bayonet-doppler.json");
+        PatternRegistry.Validation v = reg.validate("bayonet-doppler.json", doppler);
+        assertFalse(v.fatal());
+        // 44 — в best и в tier1 (best зеркалит tier1); 484 — внутри tier1
+        assertTrue(v.problems().stream().anyMatch(p -> p.contains("fake_black_pearl_p1") && p.contains("44")),
+                v.problems().toString());
+        assertTrue(v.problems().stream().anyMatch(p -> p.contains("484")), v.problems().toString());
+
+        // m9 marble fade: опечатка tire_ исправлена в данных — validate её больше не находит
+        SkinPatterns m9 = readClasspath("patterns/m9-bayonet-marble-fade.json");
+        PatternRegistry.Validation vm9 = reg.validate("m9-bayonet-marble-fade.json", m9);
+        assertTrue(vm9.problems().stream().noneMatch(p -> p.contains("tire_")), vm9.problems().toString());
+
+        // gamma-doppler: данные починены — везде emerald и нет doppler-gem категорий,
+        // поэтому guard-проверка gamma-файлов больше не срабатывает ни на одном shipped-файле
+        Resource[] gamma = new PathMatchingResourcePatternResolver().getResources("classpath:patterns/*gamma-doppler.json");
+        assertTrue(gamma.length >= 11, "ожидаем >=11 gamma-doppler файлов, найдено " + gamma.length);
+        for (Resource r : gamma) {
+            String name = r.getFilename();
+            assertNotNull(name);
+            SkinPatterns gd;
+            try (InputStream is = r.getInputStream()) {
+                gd = mapper.readValue(is, SkinPatterns.class);
+            }
+            Map<String, SkinPatterns.CategoryDef> cats = gd.categories();
+            assertTrue(cats.containsKey("emerald"), name + ": нет категории emerald");
+            for (String wrong : List.of("ruby", "sapphire", "black_pearl", "fake_black_pearl_p1")) {
+                assertFalse(cats.containsKey(wrong), name + ": doppler-gem категория " + wrong + " в gamma-файле");
+            }
+            PatternRegistry.Validation vgd = reg.validate(name, gd);
+            assertTrue(vgd.problems().stream().noneMatch(p -> p.contains("instead of emerald")),
+                    name + ": " + vgd.problems());
+        }
+    }
+
+    @Test
+    void coverageInvariantsAcrossShippedFiles() throws Exception {
+        Resource[] resources = new PathMatchingResourcePatternResolver().getResources("classpath:patterns/*.json");
+        assertTrue(resources.length > 100, "ожидаем >100 файлов паттернов, найдено " + resources.length);
+        int fadeChecked = 0;
+        int dopplerChecked = 0;
+        for (Resource r : resources) {
+            String name = r.getFilename();
+            assertNotNull(name);
+            SkinPatterns sp;
+            try (InputStream is = r.getInputStream()) {
+                sp = mapper.readValue(is, SkinPatterns.class);
+            }
+            Map<String, SkinPatterns.CategoryDef> cats = sp.categories();
+            assertNotNull(cats, name + ": нет categories");
+            if (name.contains("-fade")) {
+                fadeChecked++;
+                boolean hasTierLists = cats.values().stream()
+                        .anyMatch(cd -> PatternRegistry.seedLists(cd).values().stream().anyMatch(l -> !l.isEmpty()));
+                boolean hasFadeCategory = cats.keySet().stream().anyMatch(k -> k.contains("fade"));
+                assertTrue(hasTierLists || hasFadeCategory,
+                        name + ": fade-файл без тир-листов и без fade-категории");
+            }
+            if (name.contains("-doppler")) {
+                dopplerChecked++;
+                for (String phase : List.of("phase1", "phase2", "phase3", "phase4")) {
+                    assertTrue(cats.containsKey(phase), name + ": нет категории " + phase);
+                }
+            }
+        }
+        assertTrue(fadeChecked > 10, "fadeChecked=" + fadeChecked);
+        assertTrue(dopplerChecked > 10, "dopplerChecked=" + dopplerChecked);
+    }
+}

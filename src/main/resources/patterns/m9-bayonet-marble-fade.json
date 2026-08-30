@@ -193,10 +193,10 @@
         989
       ]
     },
-    "max_red_tip__tire_1": {
+    "max_red_tip__tier_1": {
       "label": "Max Red Tip",
       "labelRu": "Макс красный кончик",
-      "description": "Max Red Tip - Tire 1",
+      "description": "Max Red Tip - Tier 1",
       "tier1": [
         34,
         41,
@@ -248,10 +248,10 @@
         975
       ]
     },
-    "max_red_tip__tire_2": {
+    "max_red_tip__tier_2": {
       "label": "Max Red Tip",
       "labelRu": "Макс красный кончик",
-      "description": "Max Red Tip - Tire 2",
+      "description": "Max Red Tip - Tier 2",
       "tier1": [
         11,
         29,
