@@ -29,14 +29,23 @@ public class PatternService {
     }
 
     public Optional<PatternInfo> getInfo(String marketHashName, int seed) {
+        return getInfo(marketHashName, seed, null);
+    }
+
+    /**
+     * Тултип инфо для (skin, seed). phase — фаза предмета ("Phase 2", "P4", ...):
+     * фазовые категории (суффикс _pN) фильтруются по ней, чтобы P2-предмет не получал
+     * плашку Max Blue из P4. Сиды пересекаются между фазами (один сид — разное на разных фазах).
+     * Без phase — старое поведение (первый кандидат по приоритету категорий).
+     */
+    public Optional<PatternInfo> getInfo(String marketHashName, int seed, String phase) {
         if (marketHashName == null) return Optional.empty();
         String norm = PatternRegistry.normalize(marketHashName);
         if (seed < 0 || seed > 1000) return Optional.empty();
 
-        PatternInfo base = null;
-        PatternInfo fromRedis = store.getPatternInfo(norm, seed);
-        if (fromRedis != null) base = fromRedis;
-        else base = registry.get(marketHashName, seed).orElse(null);
+        List<PatternInfo> candidates = registry.getCandidates(norm, seed);
+        if (candidates.isEmpty()) return Optional.empty();
+        PatternInfo base = pickByPhase(candidates, phase);
         if (base == null) return Optional.empty();
 
         // для Fade — точный процент + тир из ранкинга
@@ -58,6 +67,40 @@ public class PatternService {
             }
         }
         return Optional.of(base);
+    }
+
+    private static final java.util.regex.Pattern PHASE_SUFFIX =
+            java.util.regex.Pattern.compile("_p(\\d+)$");
+    private static final java.util.regex.Pattern PHASE_DIGITS =
+            java.util.regex.Pattern.compile("(\\d+)");
+
+    private static Integer phaseSuffix(String category) {
+        if (category == null) return null;
+        var m = PHASE_SUFFIX.matcher(category);
+        return m.find() ? Integer.valueOf(m.group(1)) : null;
+    }
+
+    private static Integer parsePhase(String phase) {
+        if (phase == null || phase.isBlank()) return null;
+        var m = PHASE_DIGITS.matcher(phase);
+        return m.find() ? Integer.valueOf(m.group(1)) : null;
+    }
+
+    /** Фазовый кандидат с суффиксом _pN под фазу предмета; иначе нефазовый (ruby/blue_gem/...). */
+    private static PatternInfo pickByPhase(List<PatternInfo> candidates, String phase) {
+        Integer pn = parsePhase(phase);
+        if (pn == null) return candidates.get(0);
+        PatternInfo generic = null;
+        for (PatternInfo pi : candidates) {
+            Integer s = phaseSuffix(pi.category());
+            if (s == null) {
+                if (generic == null) generic = pi;
+            } else if (s.equals(pn)) {
+                return pi;
+            }
+        }
+        // чужую фазу не показываем — только нефазовые категории
+        return generic;
     }
 
     /** Для скинов без особенностей вернет empty — фронт НЕ показывает тултип */

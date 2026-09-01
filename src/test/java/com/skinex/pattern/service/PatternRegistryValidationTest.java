@@ -55,6 +55,29 @@ class PatternRegistryValidationTest {
     }
 
     @Test
+    void phaseFilterSeparatesWaveCategories() {
+        PatternRegistry reg = loadReal();
+        // сид 610 на Karambit Doppler: ruby (tier1) и фазовые категории
+        assertTrue(reg.getCandidates("★ Karambit | Doppler", 610).size() >= 1);
+
+        PatternService svc = new PatternService(reg, new RedisPatternStore(
+                null, mapper, "pattern", 0) {}, new FadePercentageService(mapper));
+        // без фазы — приоритет gem-категории
+        assertEquals("ruby", svc.getInfo("★ Karambit | Doppler", 610).orElseThrow().category());
+        // фаза P2: gem остаётся (нефазовая категория)
+        assertEquals("ruby", svc.getInfo("★ Karambit | Doppler", 610, "Phase 2").orElseThrow().category());
+        // фазовый сид: на P2 fake-BP-метка не протекает с другой фазы
+        var anyPhase = svc.getInfo("★ Bayonet | Doppler", 44, "Phase 2");
+        if (anyPhase.isPresent()) {
+            String cat = anyPhase.get().category();
+            assertFalse(cat.endsWith("_p1"), "P2-предмет получил плашку P1: " + cat);
+        }
+        // phase=Phase 1 → фазовая категория P1
+        assertEquals("fake_black_pearl_p1",
+                svc.getInfo("★ Bayonet | Doppler", 44, "Phase 1").orElseThrow().category());
+    }
+
+    @Test
     void malformedFileSkippedOthersLoad(@TempDir Path tmp) throws Exception {
         Files.writeString(tmp.resolve("good.json"), """
                 {"skin":"Test | Good","marketHashName":"Test | Good",

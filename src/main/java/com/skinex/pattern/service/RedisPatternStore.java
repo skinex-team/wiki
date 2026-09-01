@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -149,10 +150,13 @@ public class RedisPatternStore {
     /** Полная заливка из реестра */
     public int fillAll(PatternRegistry registry) {
         int count = 0;
-        for (Map.Entry<String, Map<Integer, PatternInfo>> e : registry.snapshotIndex().entrySet()) {
-            for (PatternInfo pi : e.getValue().values()) {
-                putPatternInfo(pi);
-                count++;
+        for (Map.Entry<String, Map<Integer, List<PatternInfo>>> e : registry.snapshotIndex().entrySet()) {
+            for (List<PatternInfo> infos : e.getValue().values()) {
+                // один ключ на (skin, seed) — кладём первого кандидата (приоритет категорий)
+                if (!infos.isEmpty()) {
+                    putPatternInfo(infos.get(0));
+                    count++;
+                }
             }
         }
         for (SkinPatterns sp : registry.allSkins()) {

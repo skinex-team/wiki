@@ -29,8 +29,10 @@ public class PatternRegistry {
     // normalizedSkin -> SkinPatterns (исходный JSON)
     private final Map<String, SkinPatterns> skinsByNormalized = new ConcurrentHashMap<>();
 
-    // normalizedSkin -> seed -> PatternInfo
-    private final Map<String, Map<Integer, PatternInfo>> index = new ConcurrentHashMap<>();
+    // normalizedSkin -> seed -> [PatternInfo] по приоритету категорий.
+    // Один сид может быть в нескольких категориях (напр. один сид — Max Blue на P4 и
+    // Pink Galaxy на P2): get() отдаёт первую, getCandidates — все, выбор по фазе предмета.
+    private final Map<String, Map<Integer, List<PatternInfo>>> index = new ConcurrentHashMap<>();
 
     // список нормализованных имён скинов с особенностями (для /api/patterns/skins)
     private volatile List<String> skinList = List.of();
@@ -187,7 +189,7 @@ public class PatternRegistry {
     }
 
     private void buildIndex(String norm, SkinPatterns sp) {
-        Map<Integer, PatternInfo> bySeed = new HashMap<>(1024);
+        Map<Integer, List<PatternInfo>> bySeed = new HashMap<>(1024);
         if (sp.categories() == null) return;
         for (Map.Entry<String, SkinPatterns.CategoryDef> e : sp.categories().entrySet()) {
             String catKey = e.getKey(); // pink_gem etc
@@ -227,7 +229,7 @@ public class PatternRegistry {
         index.put(norm, bySeed);
     }
 
-    private void indexCategory(Map<Integer, PatternInfo> bySeed, SkinPatterns sp, String norm,
+    private void indexCategory(Map<Integer, List<PatternInfo>> bySeed, SkinPatterns sp, String norm,
                                String catKey, String label, String labelRu, String percentage, String desc,
                                Set<Integer> bestSet, List<Integer> seeds,
                                int tier, Integer explicitTier) {
@@ -235,7 +237,8 @@ public class PatternRegistry {
         // Для all_desc нам нужен rank по порядку списка
         for (int i = 0; i < seeds.size(); i++) {
             int seed = seeds.get(i);
-            if (bySeed.containsKey(seed)) continue; // первый (более приоритетный) wins — best/tier1 имеет приоритет
+            // сид может входить в несколько категорий (пересечения фаз) — копим все,
+            // порядок категорий в файле = приоритет; get() берёт первую
             boolean isBest = bestSet.contains(seed);
             int rank = i + 1;
             // Для tier1..4 rank внутри тира тоже по порядку
@@ -269,16 +272,26 @@ public class PatternRegistry {
                     displayName,
                     desc
             );
-            bySeed.put(seed, pi);
+            bySeed.computeIfAbsent(seed, k -> new ArrayList<>()).add(pi);
         }
     }
 
     public Optional<PatternInfo> get(String marketHashName, int seed) {
         if (marketHashName == null) return Optional.empty();
         String norm = normalize(marketHashName);
-        Map<Integer, PatternInfo> m = index.get(norm);
+        Map<Integer, List<PatternInfo>> m = index.get(norm);
         if (m == null) return Optional.empty();
-        return Optional.ofNullable(m.get(seed));
+        List<PatternInfo> l = m.get(seed);
+        return l == null || l.isEmpty() ? Optional.empty() : Optional.of(l.get(0));
+    }
+
+    /** Все категории для (skin, seed) по приоритету — для выбора по фазе предмета. */
+    public List<PatternInfo> getCandidates(String marketHashName, int seed) {
+        if (marketHashName == null) return List.of();
+        Map<Integer, List<PatternInfo>> m = index.get(normalize(marketHashName));
+        if (m == null) return List.of();
+        List<PatternInfo> l = m.get(seed);
+        return l == null ? List.of() : Collections.unmodifiableList(l);
     }
 
     public Optional<SkinPatterns> getSkin(String marketHashName) {
@@ -294,8 +307,10 @@ public class PatternRegistry {
         return skinsByNormalized.values();
     }
 
-    public Map<String, Map<Integer, PatternInfo>> snapshotIndex() {
-        return Collections.unmodifiableMap(index);
+    public Map<String, Map<Integer, List<PatternInfo>>> snapshotIndex() {
+        Map<String, Map<Integer, List<PatternInfo>>> out = new LinkedHashMap<>();
+        index.forEach((k, v) -> out.put(k, Collections.unmodifiableMap(v)));
+        return Collections.unmodifiableMap(out);
     }
 
     public static String normalize(String marketHashName) {

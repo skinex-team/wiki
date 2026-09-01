@@ -41,15 +41,16 @@ public class PatternController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /** Тултип: ?skin=AK-47%20|%20Aphrodite&seed=904  */
+    /** Тултип: ?skin=AK-47%20|%20Aphrodite&seed=904&phase=Phase%202  */
     @GetMapping
     public ResponseEntity<?> get(@RequestParam("skin") String skin,
                                  @RequestParam("seed") Integer seed,
-                                 @RequestParam(value = "float", required = false) Double floatValue) {
+                                 @RequestParam(value = "float", required = false) Double floatValue,
+                                 @RequestParam(value = "phase", required = false) String phase) {
         if (skin == null || skin.isBlank() || seed == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "skin and seed required"));
         }
-        var infoOpt = service.getInfo(skin, seed);
+        var infoOpt = service.getInfo(skin, seed, phase);
         if (infoOpt.isEmpty()) {
             // 204 — нет особенностей, фронт НЕ показывает тултип (важно не 404 путать с ошибкой)
             return ResponseEntity.noContent().build();
@@ -89,14 +90,18 @@ public class PatternController {
     @PostMapping("/batch")
     public List<Map<String, Object>> batch(@RequestBody List<BatchRequest> req) {
         return req.stream().map(r -> {
-            var opt = service.getInfo(r.skin(), r.seed());
+            var opt = service.getInfo(r.skin(), r.seed(), r.phase());
             if (opt.isEmpty()) {
-                return Map.<String, Object>of("skin", r.skin(), "seed", r.seed(), "hasFeatures", false);
+                Map<String, Object> none = new java.util.HashMap<>(
+                        Map.of("skin", r.skin(), "seed", r.seed(), "hasFeatures", false));
+                if (r.phase() != null) none.put("phase", r.phase());
+                return none;
             }
             PatternInfo pi = opt.get();
-            java.util.HashMap<String, Object> mm = new java.util.HashMap<>();
+            Map<String, Object> mm = new java.util.HashMap<>();
             mm.put("skin", pi.skin());
             mm.put("seed", pi.seed());
+            if (r.phase() != null) mm.put("phase", r.phase());
             mm.put("category", pi.category());
             mm.put("categoryLabel", pi.categoryLabel());
             mm.put("categoryLabelRu", pi.categoryLabelRu());
@@ -110,7 +115,7 @@ public class PatternController {
         }).toList();
     }
 
-    public record BatchRequest(String skin, int seed) {}
+    public record BatchRequest(String skin, int seed, String phase) {}
 
     private static String decode(String s) {
         try {
