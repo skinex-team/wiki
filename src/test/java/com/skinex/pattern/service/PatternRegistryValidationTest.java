@@ -36,36 +36,52 @@ class PatternRegistryValidationTest {
     @Test
     void dopplerGemCategoriesHaveSeedTiers() throws Exception {
         PatternRegistry reg = loadReal();
-        SkinPatterns sp = reg.getSkin("★ Bayonet | Doppler").orElseThrow();
+        // после чистки шаблонных копипаст-листов gem-данные остались не у всех ножей:
+        // Stiletto — ruby, m9 — black_pearl, glock/karambit gamma — emerald
+        SkinPatterns sp = reg.getSkin("★ Stiletto Knife | Doppler").orElseThrow();
         Map<String, SkinPatterns.CategoryDef> cats = sp.categories();
-        // gem-категории: реальные сид-листы из гайдов korenevskiy (Rank I/II/III → tier1..3)
-        for (String gem : List.of("ruby", "sapphire", "black_pearl")) {
-            SkinPatterns.CategoryDef c = cats.get(gem);
-            assertNotNull(c, gem);
-            assertFalse(c.tier1().isEmpty(), gem + " tier1 пуст");
-            assertFalse(c.tier2().isEmpty(), gem + " tier2 пуст");
-        }
+        SkinPatterns.CategoryDef ruby = cats.get("ruby");
+        assertNotNull(ruby);
+        assertFalse(ruby.tier1().isEmpty(), "ruby tier1 пуст");
+        assertFalse(ruby.tier2().isEmpty(), "ruby tier2 пуст");
+
+        SkinPatterns m9 = reg.getSkin("★ M9 Bayonet | Doppler").orElseThrow();
+        SkinPatterns.CategoryDef bp = m9.categories().get("black_pearl");
+        assertNotNull(bp, "m9 black_pearl удалён вместе с шаблонами — нужен источник данных");
+        assertFalse(bp.tier1().isEmpty());
+
         // фазовые особенности: fake black pearl P1 с тир-листами
-        assertNotNull(cats.get("fake_black_pearl_p1"));
-        assertFalse(cats.get("fake_black_pearl_p1").tier1().isEmpty());
+        SkinPatterns bayonet = reg.getSkin("★ Bayonet | Doppler").orElseThrow();
+        assertNotNull(bayonet.categories().get("fake_black_pearl_p1"));
+        assertFalse(bayonet.categories().get("fake_black_pearl_p1").tier1().isEmpty());
 
         // /api/patterns/skin/{name} сериализует SkinPatterns напрямую — поля должны быть в JSON
-        String json = mapper.writeValueAsString(cats.get("ruby"));
+        String json = mapper.writeValueAsString(ruby);
         assertTrue(json.contains("\"tier1\""), json);
     }
 
     @Test
     void phaseFilterSeparatesWaveCategories() {
         PatternRegistry reg = loadReal();
-        // сид 610 на Karambit Doppler: ruby (tier1) и фазовые категории
-        assertTrue(reg.getCandidates("★ Karambit | Doppler", 610).size() >= 1);
+        // Stiletto Doppler: после чистки осталась только gem-категория ruby; 93 — её сид
+        assertTrue(reg.getCandidates("★ Stiletto Knife | Doppler", 93).size() >= 1);
 
         PatternService svc = new PatternService(reg, new RedisPatternStore(
                 null, mapper, "pattern", 0) {}, new FadePercentageService(mapper));
         // без фазы — приоритет gem-категории
-        assertEquals("ruby", svc.getInfo("★ Karambit | Doppler", 610).orElseThrow().category());
-        // фаза P2: gem остаётся (нефазовая категория)
-        assertEquals("ruby", svc.getInfo("★ Karambit | Doppler", 610, "Phase 2").orElseThrow().category());
+        assertEquals("ruby", svc.getInfo("★ Stiletto Knife | Doppler", 93).orElseThrow().category());
+        // фаза Ruby — показываем её gem
+        assertEquals("ruby", svc.getInfo("★ Stiletto Knife | Doppler", 93, "Ruby").orElseThrow().category());
+        // нумерованная фаза — gem не показываем (P2-предмет не может быть рубином)
+        assertTrue(svc.getInfo("★ Stiletto Knife | Doppler", 93, "Phase 2").isEmpty());
+        // чужая gem-фаза — не показываем
+        assertTrue(svc.getInfo("★ Stiletto Knife | Doppler", 93, "Sapphire").isEmpty());
+
+        // регрессия: Black Pearl-лот стилета (сид 183) раньше получал плашку Max Blue —
+        // tip-категории оказались шаблонными и удалены, BP у стилета тоже копипаст → пусто
+        assertTrue(svc.getInfo("★ Stiletto Knife | Doppler", 183, "Black Pearl").isEmpty());
+        assertTrue(svc.getInfo("★ Stiletto Knife | Doppler", 183).isEmpty());
+
         // фазовый сид: на P2 fake-BP-метка не протекает с другой фазы
         var anyPhase = svc.getInfo("★ Bayonet | Doppler", 44, "Phase 2");
         if (anyPhase.isPresent()) {
@@ -132,10 +148,10 @@ class PatternRegistryValidationTest {
         PatternRegistry.Validation vm9 = reg.validate("m9-bayonet-marble-fade.json", m9);
         assertTrue(vm9.problems().stream().noneMatch(p -> p.contains("tire_")), vm9.problems().toString());
 
-        // gamma-doppler: данные починены — везде emerald и нет doppler-gem категорий,
-        // поэтому guard-проверка gamma-файлов больше не срабатывает ни на одном shipped-файле
+        // gamma-doppler: после чистки шаблонов остались только файлы с уникальными данными;
+        // doppler-gem категорий в них быть не должно (guard-проверка ни на одном не срабатывает)
         Resource[] gamma = new PathMatchingResourcePatternResolver().getResources("classpath:patterns/*gamma-doppler.json");
-        assertTrue(gamma.length >= 11, "ожидаем >=11 gamma-doppler файлов, найдено " + gamma.length);
+        assertTrue(gamma.length >= 5, "ожидаем >=5 gamma-doppler файлов, найдено " + gamma.length);
         for (Resource r : gamma) {
             String name = r.getFilename();
             assertNotNull(name);
@@ -144,7 +160,9 @@ class PatternRegistryValidationTest {
                 gd = mapper.readValue(is, SkinPatterns.class);
             }
             Map<String, SkinPatterns.CategoryDef> cats = gd.categories();
-            assertTrue(cats.containsKey("emerald"), name + ": нет категории emerald");
+            boolean hasSeeds = cats.values().stream()
+                    .anyMatch(cd -> PatternRegistry.seedLists(cd).values().stream().anyMatch(l -> !l.isEmpty()));
+            assertTrue(hasSeeds, name + ": gamma-файл без сид-листов");
             for (String wrong : List.of("ruby", "sapphire", "black_pearl", "fake_black_pearl_p1")) {
                 assertFalse(cats.containsKey(wrong), name + ": doppler-gem категория " + wrong + " в gamma-файле");
             }

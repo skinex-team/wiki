@@ -86,20 +86,46 @@ public class PatternService {
         return m.find() ? Integer.valueOf(m.group(1)) : null;
     }
 
-    /** Фазовый кандидат с суффиксом _pN под фазу предмета; иначе нефазовый (ruby/blue_gem/...). */
+    /** Гем-категории допплеров: соответствуют фазам Ruby/Sapphire/Black Pearl/Emerald. */
+    private static final java.util.Set<String> GEM_CATEGORIES = java.util.Set.of(
+            "ruby", "sapphire", "black_pearl", "emerald");
+
+    /** Фаза-гем ("Ruby" -> ruby, "Black Pearl" -> black_pearl); для обычных фаз — null. */
+    private static String gemCategory(String phase) {
+        if (phase == null) return null;
+        String p = phase.trim().toLowerCase();
+        return switch (p) {
+            case "ruby" -> "ruby";
+            case "sapphire" -> "sapphire";
+            case "black pearl" -> "black_pearl";
+            case "emerald" -> "emerald";
+            default -> null;
+        };
+    }
+
+    /**
+     * Выбор кандидата по фазе предмета:
+     * - нумерованная фаза (Phase 1..4) — только категории _pN с совпадающим N; гемы не показываем;
+     * - гем-фаза (Ruby/Sapphire/Black Pearl/Emerald) — только её гем-категория, _pN не показываем;
+     * - без фазы — первый кандидат (приоритет категорий в файле).
+     */
     private static PatternInfo pickByPhase(List<PatternInfo> candidates, String phase) {
         Integer pn = parsePhase(phase);
-        if (pn == null) return candidates.get(0);
+        String gem = gemCategory(phase);
+        if (pn == null && gem == null) return candidates.get(0);
         PatternInfo generic = null;
         for (PatternInfo pi : candidates) {
             Integer s = phaseSuffix(pi.category());
-            if (s == null) {
-                if (generic == null) generic = pi;
-            } else if (s.equals(pn)) {
-                return pi;
+            if (s != null) {
+                if (pn != null && s.equals(pn)) return pi;
+                continue;
             }
+            if (GEM_CATEGORIES.contains(pi.category())) {
+                if (gem != null && gem.equals(pi.category())) return pi;
+                continue;
+            }
+            if (generic == null) generic = pi;
         }
-        // чужую фазу не показываем — только нефазовые категории
         return generic;
     }
 
