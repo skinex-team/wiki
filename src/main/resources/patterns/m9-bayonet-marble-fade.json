@@ -2,15 +2,15 @@
   "skin": "★ M9 Bayonet | Marble Fade",
   "marketHashName": "★ M9 Bayonet | Marble Fade",
   "normalizedName": "★ m9 bayonet | marble fade",
-  "source": "generated: community canon (steamanalyst, csgoskins.gg, pricempire, skin.land, pattern.wiki)",
-  "author": "pattern-service generator",
-  "updated": "2026-08-27",
+  "source": "steamcommunity korenevskiy guides [2948091105]",
+  "author": "korenevskiy guide parser",
+  "updated": "2026-09-01",
   "categories": {
-    "max_blue_tip__tier_1": {
+    "max_blue_tip": {
       "label": "Max Blue Tip",
-      "labelRu": "Макс синий кончик",
-      "description": "Max Blue Tip - Tier 1",
-      "tier1": [
+      "labelRu": "",
+      "description": "",
+      "all": [
         5,
         8,
         14,
@@ -62,14 +62,7 @@
         959,
         966,
         971,
-        997
-      ]
-    },
-    "max_blue_tip__tier_2": {
-      "label": "Max Blue Tip",
-      "labelRu": "Макс синий кончик",
-      "description": "Max Blue Tip - Tier 2",
-      "tier2": [
+        997,
         90,
         121,
         149,
@@ -120,14 +113,7 @@
         941,
         972,
         976,
-        977
-      ]
-    },
-    "max_blue_tip__tier_3": {
-      "label": "Max Blue Tip",
-      "labelRu": "Макс синий кончик",
-      "description": "Max Blue Tip - Tier 3",
-      "tier3": [
+        977,
         9,
         27,
         60,
@@ -191,12 +177,7 @@
         962,
         980,
         989
-      ]
-    },
-    "max_red_tip__tier_1": {
-      "label": "Max Red Tip",
-      "labelRu": "Макс красный кончик",
-      "description": "Max Red Tip - Tier 1",
+      ],
       "tier1": [
         34,
         41,
@@ -246,13 +227,8 @@
         944,
         961,
         975
-      ]
-    },
-    "max_red_tip__tier_2": {
-      "label": "Max Red Tip",
-      "labelRu": "Макс красный кончик",
-      "description": "Max Red Tip - Tier 2",
-      "tier1": [
+      ],
+      "tier2": [
         11,
         29,
         46,
@@ -309,12 +285,7 @@
         956,
         968,
         981
-      ]
-    },
-    "max_red_tip__tier_3": {
-      "label": "Max Red Tip",
-      "labelRu": "Макс красный кончик",
-      "description": "Max Red Tip - Tier 3",
+      ],
       "tier3": [
         21,
         30,
@@ -373,12 +344,7 @@
         891,
         917,
         940
-      ]
-    },
-    "max_red_tip__tier_4": {
-      "label": "Max Red Tip",
-      "labelRu": "Макс красный кончик",
-      "description": "Max Red Tip - Tier 4",
+      ],
       "tier4": [
         6,
         12,
@@ -431,14 +397,7 @@
         953,
         960,
         979,
-        161
-      ]
-    },
-    "max_red_tip__other": {
-      "label": "Max Red Tip",
-      "labelRu": "Макс красный кончик",
-      "description": "Max Red Tip - Other",
-      "tier1": [
+        161,
         18,
         23,
         79,
@@ -452,9 +411,7 @@
         289,
         376,
         389,
-        392,
         416,
-        446,
         528,
         645,
         658,

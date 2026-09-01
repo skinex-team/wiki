@@ -2,71 +2,15 @@
   "skin": "★ Bowie Knife | Marble Fade",
   "marketHashName": "★ Bowie Knife | Marble Fade",
   "normalizedName": "★ bowie knife | marble fade",
-  "source": "generated: community canon (steamanalyst, csgoskins.gg, pricempire, skin.land, pattern.wiki)",
-  "author": "pattern-service generator",
-  "updated": "2026-08-27",
+  "source": "steamcommunity korenevskiy guides [3339251715]",
+  "author": "korenevskiy guide parser",
+  "updated": "2026-09-01",
   "categories": {
-    "max_red_tip": {
-      "label": "Max Red Tip",
-      "labelRu": "Макс красный кончик",
-      "description": "Max Red Tip",
-      "tier1": [
-        16,
-        48,
-        126,
-        129,
-        146,
-        152,
-        182,
-        204,
-        230,
-        241,
-        252,
-        281,
-        292,
-        332,
-        344,
-        359,
-        393,
-        412,
-        452,
-        457,
-        522,
-        541,
-        578,
-        602,
-        607,
-        628,
-        631,
-        649,
-        652,
-        660,
-        673,
-        685,
-        688,
-        705,
-        736,
-        743,
-        773,
-        777,
-        780,
-        787,
-        792,
-        832,
-        874,
-        908,
-        918,
-        923,
-        982,
-        988,
-        994
-      ]
-    },
-    "max_blue_tip__tier_1": {
+    "max_blue_tip": {
       "label": "Max Blue Tip",
-      "labelRu": "Макс синий кончик",
-      "description": "Max Blue Tip - Tier 1",
-      "tier1": [
+      "labelRu": "",
+      "description": "",
+      "all": [
         21,
         30,
         43,
@@ -123,14 +67,7 @@
         881,
         891,
         917,
-        940
-      ]
-    },
-    "max_blue_tip__tier_2": {
-      "label": "Max Blue Tip",
-      "labelRu": "Макс синий кончик",
-      "description": "Max Blue Tip - Tier 2",
-      "tier2": [
+        940,
         11,
         29,
         46,
@@ -186,14 +123,7 @@
         936,
         956,
         968,
-        981
-      ]
-    },
-    "max_blue_tip__other": {
-      "label": "Max Blue Tip",
-      "labelRu": "Макс синий кончик",
-      "description": "Max Blue Tip - Other",
-      "tier1": [
+        981,
         34,
         41,
         87,
@@ -242,12 +172,7 @@
         944,
         961,
         975
-      ]
-    },
-    "max_red_tip__tier_1": {
-      "label": "Max Red Tip",
-      "labelRu": "Макс красный кончик",
-      "description": "Max Red Tip - Tier 1",
+      ],
       "tier1": [
         5,
         8,
@@ -301,12 +226,7 @@
         966,
         971,
         997
-      ]
-    },
-    "max_red_tip__tier_2": {
-      "label": "Max Red Tip",
-      "labelRu": "Макс красный кончик",
-      "description": "Max Red Tip - Tier 2",
+      ],
       "tier2": [
         90,
         121,
@@ -354,12 +274,7 @@
         972,
         976,
         977
-      ]
-    },
-    "max_red_tip__tier_3": {
-      "label": "Max Red Tip",
-      "labelRu": "Макс красный кончик",
-      "description": "Max Red Tip - Tier 3",
+      ],
       "tier3": [
         9,
         27,
@@ -429,12 +344,7 @@
         962,
         980,
         989
-      ]
-    },
-    "max_red_tip__tier_4": {
-      "label": "Max Red Tip",
-      "labelRu": "Макс красный кончик",
-      "description": "Max Red Tip - Tier 4",
+      ],
       "tier4": [
         0,
         1,
@@ -517,6 +427,63 @@
         907,
         929,
         939
+      ]
+    },
+    "max_red_tip": {
+      "label": "Max Red Tip",
+      "labelRu": "",
+      "description": "",
+      "all": [
+        16,
+        48,
+        126,
+        129,
+        146,
+        152,
+        182,
+        204,
+        230,
+        241,
+        252,
+        281,
+        292,
+        332,
+        344,
+        359,
+        393,
+        412,
+        452,
+        457,
+        522,
+        541,
+        578,
+        602,
+        607,
+        628,
+        631,
+        649,
+        652,
+        660,
+        673,
+        685,
+        688,
+        701,
+        705,
+        736,
+        743,
+        773,
+        777,
+        780,
+        787,
+        792,
+        832,
+        874,
+        908,
+        918,
+        923,
+        982,
+        988,
+        994
       ]
     }
   }

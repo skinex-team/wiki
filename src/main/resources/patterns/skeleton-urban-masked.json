@@ -1,0 +1,39 @@
+{
+  "skin": "★ Skeleton Knife | Urban Masked",
+  "marketHashName": "★ Skeleton Knife | Urban Masked",
+  "normalizedName": "★ skeleton knife | urban masked",
+  "source": "steamcommunity korenevskiy guides [3791794693]",
+  "author": "korenevskiy guide parser",
+  "updated": "2026-09-01",
+  "categories": {
+    "max_black": {
+      "label": "Max Black",
+      "labelRu": "",
+      "description": "",
+      "all": [
+        154,
+        723,
+        416
+      ]
+    },
+    "white_gem": {
+      "label": "White Gem",
+      "labelRu": "",
+      "description": "",
+      "best": [
+        0
+      ],
+      "tier1": [
+        206,
+        637,
+        718,
+        402,
+        679,
+        509,
+        372,
+        52,
+        239
+      ]
+    }
+  }
+}

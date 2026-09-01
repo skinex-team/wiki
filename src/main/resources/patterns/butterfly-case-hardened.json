@@ -2,59 +2,57 @@
   "skin": "★ Butterfly Knife | Case Hardened",
   "marketHashName": "★ Butterfly Knife | Case Hardened",
   "normalizedName": "★ butterfly knife | case hardened",
-  "source": "generated: community canon (steamanalyst, csgoskins.gg, pricempire, skin.land, pattern.wiki)",
-  "author": "pattern-service generator",
-  "updated": "2026-08-27",
+  "source": "steamcommunity korenevskiy guides [3087097250]",
+  "author": "korenevskiy guide parser",
+  "updated": "2026-09-01",
   "categories": {
-    "blue_gem_best": {
+    "blue_gem": {
       "label": "Blue Gem",
       "labelRu": "Синий гем",
-      "description": "Tier 0 — 1 сидов",
-      "tier0": [
-        182
-      ],
+      "description": "",
       "best": [
-        182
-      ]
-    },
-    "blue_gem_tier1": {
-      "label": "Blue Gem",
-      "labelRu": "Синий гем",
-      "description": "Tier 1 — 5 сидов",
+        182,
+        494
+      ],
       "tier1": [
-        29,
-        398,
-        494,
-        652,
-        838
-      ]
-    },
-    "blue_gem_tier2": {
-      "label": "Blue Gem",
-      "labelRu": "Синий гем",
-      "description": "Tier 2 — 15 сидов",
-      "tier2": [
-        73,
-        147,
-        214,
+        194,
         283,
         330,
+        694,
+        703,
+        838,
+        891,
+        913,
+        917
+      ],
+      "tier2": [
+        29,
+        194,
+        214,
+        263,
+        283,
         371,
+        396,
+        398,
+        478,
+        488,
+        494,
+        510,
+        612,
         638,
-        721,
+        652,
+        694,
+        703,
+        717,
         749,
-        839,
+        800,
         868,
         881,
         891,
+        913,
         917,
-        919
-      ]
-    },
-    "blue_gem_tier3": {
-      "label": "Blue Gem",
-      "labelRu": "Синий гем",
-      "description": "Tier 3 — 61 сидов",
+        928
+      ],
       "tier3": [
         27,
         38,
@@ -92,6 +90,7 @@
         643,
         655,
         664,
+        699,
         702,
         705,
         711,
@@ -117,12 +116,7 @@
         958,
         964,
         965
-      ]
-    },
-    "blue_gem_tier4": {
-      "label": "Blue Gem",
-      "labelRu": "Синий гем",
-      "description": "Tier 4 — 98 сидов",
+      ],
       "tier4": [
         10,
         11,
@@ -190,7 +184,6 @@
         658,
         671,
         672,
-        699,
         713,
         720,
         753,

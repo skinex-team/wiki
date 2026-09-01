@@ -1,0 +1,50 @@
+{
+  "skin": "★ Driver Gloves | Brocade Flowers",
+  "marketHashName": "★ Driver Gloves | Brocade Flowers",
+  "normalizedName": "★ driver gloves | brocade flowers",
+  "source": "steamcommunity korenevskiy guides [3683445315]",
+  "author": "korenevskiy guide parser",
+  "updated": "2026-09-01",
+  "categories": {
+    "golden_bough": {
+      "label": "Golden Bough",
+      "labelRu": "",
+      "description": "",
+      "best": [
+        63
+      ]
+    },
+    "pink_flower": {
+      "label": "Pink Flower",
+      "labelRu": "",
+      "description": "",
+      "best": [
+        104
+      ]
+    },
+    "pink_purple_flowers": {
+      "label": "Pink & Purple Flowers",
+      "labelRu": "",
+      "description": "",
+      "best": [
+        324
+      ]
+    },
+    "pink_white_flowers": {
+      "label": "Pink & White Flowers",
+      "labelRu": "",
+      "description": "",
+      "best": [
+        47
+      ]
+    },
+    "purple_flower": {
+      "label": "Purple Flower",
+      "labelRu": "",
+      "description": "",
+      "best": [
+        329
+      ]
+    }
+  }
+}

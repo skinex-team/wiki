@@ -2,25 +2,17 @@
   "skin": "★ Flip Knife | Marble Fade",
   "marketHashName": "★ Flip Knife | Marble Fade",
   "normalizedName": "★ flip knife | marble fade",
-  "source": "generated: community canon (steamanalyst, csgoskins.gg, pricempire, skin.land, pattern.wiki)",
-  "author": "pattern-service generator",
-  "updated": "2026-08-27",
+  "source": "steamcommunity korenevskiy guides [3137162447]",
+  "author": "korenevskiy guide parser",
+  "updated": "2026-09-01",
   "categories": {
-    "1st_max": {
+    "fire_ice": {
       "label": "Fire & Ice",
       "labelRu": "Огонь и лед",
-      "description": "1st Max",
+      "description": "",
       "tier1": [
         412
       ],
-      "best": [
-        412
-      ]
-    },
-    "2nd_max": {
-      "label": "Fire & Ice",
-      "labelRu": "Огонь и лед",
-      "description": "2nd Max",
       "tier2": [
         16,
         146,
@@ -30,13 +22,9 @@
         541,
         602,
         649,
-        688
-      ]
-    },
-    "3rd_max": {
-      "label": "Fire & Ice",
-      "labelRu": "Огонь и лед",
-      "description": "3rd Max",
+        688,
+        701
+      ],
       "tier3": [
         152,
         281,
@@ -48,12 +36,7 @@
         777,
         792,
         994
-      ]
-    },
-    "4th_max": {
-      "label": "Fire & Ice",
-      "labelRu": "Огонь и лед",
-      "description": "4th Max",
+      ],
       "tier4": [
         48,
         126,
@@ -65,12 +48,7 @@
         908,
         918,
         923
-      ]
-    },
-    "5th_max": {
-      "label": "Fire & Ice",
-      "labelRu": "Огонь и лед",
-      "description": "5th Max",
+      ],
       "tier5": [
         182,
         204,
@@ -85,12 +63,7 @@
         736,
         832,
         988
-      ]
-    },
-    "6th_max": {
-      "label": "Fire & Ice",
-      "labelRu": "Огонь и лед",
-      "description": "6th Max",
+      ],
       "tier6": [
         112,
         230,
@@ -107,12 +80,7 @@
         873,
         876,
         982
-      ]
-    },
-    "7th_max": {
-      "label": "Fire & Ice",
-      "labelRu": "Огонь и лед",
-      "description": "7th Max",
+      ],
       "tier7": [
         8,
         14,
@@ -136,14 +104,8 @@
         826,
         867,
         949
-      ]
-    },
-    "8th_max": {
-      "label": "Fire & Ice",
-      "labelRu": "Огонь и лед",
-      "description": "8th Max",
+      ],
       "tier8": [
-        370,
         5,
         178,
         188,
@@ -158,12 +120,7 @@
         854,
         966,
         971
-      ]
-    },
-    "9th_max": {
-      "label": "Fire & Ice",
-      "labelRu": "Огонь и лед",
-      "description": "9th Max",
+      ],
       "tier9": [
         68,
         121,
@@ -186,12 +143,7 @@
         922,
         959,
         997
-      ]
-    },
-    "10th_max": {
-      "label": "Fire & Ice",
-      "labelRu": "Огонь и лед",
-      "description": "10th Max",
+      ],
       "tier10": [
         28,
         156,
@@ -216,9 +168,9 @@
       ]
     },
     "fake_fire_ice": {
-      "label": "Fire & Ice",
-      "labelRu": "Огонь и лед",
-      "description": "Fake Fire & Ice",
+      "label": "Fake Fire & Ice",
+      "labelRu": "Фейк огонь и лед",
+      "description": "",
       "tier1": [
         9,
         27,
