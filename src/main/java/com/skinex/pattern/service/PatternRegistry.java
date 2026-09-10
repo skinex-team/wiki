@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import jakarta.annotation.PostConstruct;
 import java.io.InputStream;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * In-memory реестр всех скинов с редкими паттернами.
@@ -26,16 +25,21 @@ public class PatternRegistry {
 
     private final ObjectMapper mapper;
 
-    // normalizedSkin -> SkinPatterns (исходный JSON)
-    private final Map<String, SkinPatterns> skinsByNormalized = new ConcurrentHashMap<>();
+    /**
+     * Всё состояние реестра одним immutable-объектом: reload строит новые структуры локально
+     * и подменяет ссылку атомарно — читатели никогда не видят частично загруженный индекс.
+     *
+     * @param skinsByNormalized normalizedSkin -> SkinPatterns (исходный JSON)
+     * @param index normalizedSkin -> seed -> [PatternInfo] по приоритету категорий.
+     *              Один сид может быть в нескольких категориях (напр. один сид — Max Blue на P4 и
+     *              Pink Galaxy на P2): get() отдаёт первую, getCandidates — все, выбор по фазе предмета.
+     * @param skinList список нормализованных имён скинов с особенностями (для /api/patterns/skins)
+     */
+    private record RegistryState(Map<String, SkinPatterns> skinsByNormalized,
+                                 Map<String, Map<Integer, List<PatternInfo>>> index,
+                                 List<String> skinList) {}
 
-    // normalizedSkin -> seed -> [PatternInfo] по приоритету категорий.
-    // Один сид может быть в нескольких категориях (напр. один сид — Max Blue на P4 и
-    // Pink Galaxy на P2): get() отдаёт первую, getCandidates — все, выбор по фазе предмета.
-    private final Map<String, Map<Integer, List<PatternInfo>>> index = new ConcurrentHashMap<>();
-
-    // список нормализованных имён скинов с особенностями (для /api/patterns/skins)
-    private volatile List<String> skinList = List.of();
+    private volatile RegistryState state = new RegistryState(Map.of(), Map.of(), List.of());
 
     public PatternRegistry(ObjectMapper mapper) {
         this.mapper = mapper;
@@ -55,8 +59,10 @@ public class PatternRegistry {
      * Битый/невалидный файл не роняет загрузку остальных: логируем WARNING и пропускаем.
      */
     synchronized int loadAll(String locationPattern) {
-        skinsByNormalized.clear();
-        index.clear();
+        // Строим новое состояние локально и публикуем одной volatile-записью в конце:
+        // в окне reload читатели продолжают видеть предыдущее состояние целиком.
+        Map<String, SkinPatterns> newSkins = new HashMap<>();
+        Map<String, Map<Integer, List<PatternInfo>>> newIndex = new HashMap<>();
         int files = 0;
         int skipped = 0;
         try {
@@ -75,8 +81,8 @@ public class PatternRegistry {
                     }
                     String norm = normalize(sp.marketHashName() != null ? sp.marketHashName() : sp.skin());
                     // переопределяем normalizedName на каноничный
-                    skinsByNormalized.put(norm, sp);
-                    buildIndex(norm, sp);
+                    newSkins.put(norm, sp);
+                    buildIndex(newIndex, norm, sp);
                     files++;
                     log.info("Loaded patterns for {} ({} categories) from {}", sp.skin(), sp.categories() != null ? sp.categories().size() : 0, filename);
                 } catch (Exception e) {
@@ -87,12 +93,17 @@ public class PatternRegistry {
         } catch (Exception e) {
             log.error("Failed to scan {}: {}", locationPattern, e.getMessage(), e);
         }
-        skinList = List.copyOf(new TreeSet<>(skinsByNormalized.keySet()));
+        Map<String, Map<Integer, List<PatternInfo>>> immutableIndex = new HashMap<>();
+        newIndex.forEach((k, v) -> immutableIndex.put(k, Collections.unmodifiableMap(v)));
+        state = new RegistryState(
+                Collections.unmodifiableMap(newSkins),
+                Collections.unmodifiableMap(immutableIndex),
+                List.copyOf(new TreeSet<>(newSkins.keySet())));
         // Также добавляем исходные marketHashName для удобства
-        log.info("PatternRegistry loaded {} skins: {}", skinsByNormalized.size(), skinList);
+        log.info("PatternRegistry loaded {} skins: {}", newSkins.size(), state.skinList());
         // Сводка покрытия: сколько файлов/скинов/сидов реально в индексе
         log.info("PatternRegistry load summary: files loaded={}, skins indexed={}, total seeds indexed={}, files skipped={}",
-                files, skinsByNormalized.size(), totalIndexedSeeds(), skipped);
+                files, newSkins.size(), totalIndexedSeeds(), skipped);
         return files;
     }
 
@@ -188,7 +199,7 @@ public class PatternRegistry {
         return lists;
     }
 
-    private void buildIndex(String norm, SkinPatterns sp) {
+    private void buildIndex(Map<String, Map<Integer, List<PatternInfo>>> target, String norm, SkinPatterns sp) {
         Map<Integer, List<PatternInfo>> bySeed = new HashMap<>(1024);
         if (sp.categories() == null) return;
         for (Map.Entry<String, SkinPatterns.CategoryDef> e : sp.categories().entrySet()) {
@@ -226,7 +237,7 @@ public class PatternRegistry {
             }
         }
         // Помечаем excluded как unknown (не индексируем)
-        index.put(norm, bySeed);
+        target.put(norm, bySeed);
     }
 
     private void indexCategory(Map<Integer, List<PatternInfo>> bySeed, SkinPatterns sp, String norm,
@@ -279,7 +290,7 @@ public class PatternRegistry {
     public Optional<PatternInfo> get(String marketHashName, int seed) {
         if (marketHashName == null) return Optional.empty();
         String norm = normalize(marketHashName);
-        Map<Integer, List<PatternInfo>> m = index.get(norm);
+        Map<Integer, List<PatternInfo>> m = state.index().get(norm);
         if (m == null) return Optional.empty();
         List<PatternInfo> l = m.get(seed);
         return l == null || l.isEmpty() ? Optional.empty() : Optional.of(l.get(0));
@@ -288,7 +299,7 @@ public class PatternRegistry {
     /** Все категории для (skin, seed) по приоритету — для выбора по фазе предмета. */
     public List<PatternInfo> getCandidates(String marketHashName, int seed) {
         if (marketHashName == null) return List.of();
-        Map<Integer, List<PatternInfo>> m = index.get(normalize(marketHashName));
+        Map<Integer, List<PatternInfo>> m = state.index().get(normalize(marketHashName));
         if (m == null) return List.of();
         List<PatternInfo> l = m.get(seed);
         return l == null ? List.of() : Collections.unmodifiableList(l);
@@ -296,29 +307,37 @@ public class PatternRegistry {
 
     public Optional<SkinPatterns> getSkin(String marketHashName) {
         if (marketHashName == null) return Optional.empty();
-        return Optional.ofNullable(skinsByNormalized.get(normalize(marketHashName)));
+        return Optional.ofNullable(state.skinsByNormalized().get(normalize(marketHashName)));
     }
 
     public List<String> listSkinsNormalized() {
-        return skinList;
+        return state.skinList();
     }
 
     public Collection<SkinPatterns> allSkins() {
-        return skinsByNormalized.values();
+        return state.skinsByNormalized().values();
     }
 
+    /** Текущий индекс (уже immutable, копия не нужна) — для заливки в Redis. */
     public Map<String, Map<Integer, List<PatternInfo>>> snapshotIndex() {
-        Map<String, Map<Integer, List<PatternInfo>>> out = new LinkedHashMap<>();
-        index.forEach((k, v) -> out.put(k, Collections.unmodifiableMap(v)));
-        return Collections.unmodifiableMap(out);
+        return state.index();
     }
 
+    /**
+     * Нормализация к ключу файлов паттернов: trim + lowercase, плюс срез Steam-маркеров
+     * качества — в файлах паттернов их нет:
+     * "★ StatTrak™ Karambit | Doppler" → "★ karambit | doppler",
+     * "★ Souvenir Karambit | Doppler" → "★ karambit | doppler",
+     * "StatTrak™ AK-47 | Redline" → "ak-47 | redline" (маркер без ★ тоже срезаем).
+     */
     public static String normalize(String marketHashName) {
         if (marketHashName == null) return "";
-        return marketHashName.trim().toLowerCase(Locale.ROOT);
+        String s = marketHashName.trim().toLowerCase(Locale.ROOT);
+        s = s.replace("stattrak™", "").replace("souvenir", "");
+        return s.replaceAll("\\s{2,}", " ").trim();
     }
 
     public int totalIndexedSeeds() {
-        return index.values().stream().mapToInt(Map::size).sum();
+        return state.index().values().stream().mapToInt(Map::size).sum();
     }
 }

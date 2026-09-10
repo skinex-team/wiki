@@ -88,34 +88,53 @@ public class PatternController {
 
     /** Батч: POST /api/patterns/batch  body: [{skin, seed}, ...] -> [{skin, seed, info|null}, ...] */
     @PostMapping("/batch")
-    public List<Map<String, Object>> batch(@RequestBody List<BatchRequest> req) {
-        return req.stream().map(r -> {
-            var opt = service.getInfo(r.skin(), r.seed(), r.phase());
-            if (opt.isEmpty()) {
-                Map<String, Object> none = new java.util.HashMap<>(
-                        Map.of("skin", r.skin(), "seed", r.seed(), "hasFeatures", false));
-                if (r.phase() != null) none.put("phase", r.phase());
-                return none;
-            }
-            PatternInfo pi = opt.get();
-            Map<String, Object> mm = new java.util.HashMap<>();
-            mm.put("skin", pi.skin());
-            mm.put("seed", pi.seed());
-            if (r.phase() != null) mm.put("phase", r.phase());
-            mm.put("category", pi.category());
-            mm.put("categoryLabel", pi.categoryLabel());
-            mm.put("categoryLabelRu", pi.categoryLabelRu());
-            if (pi.percentage() != null) mm.put("percentage", pi.percentage());
-            mm.put("tier", pi.tier());
-            mm.put("rank", pi.rank());
-            mm.put("isBest", pi.isBest());
-            mm.put("displayName", pi.displayName());
-            mm.put("hasFeatures", true);
-            return mm;
-        }).toList();
+    public ResponseEntity<?> batch(@RequestBody(required = false) List<BatchRequest> req) {
+        if (req == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "batch body required"));
+        }
+        if (req.size() > BATCH_LIMIT) {
+            return ResponseEntity.badRequest().body(Map.of("error", "batch too large: max " + BATCH_LIMIT));
+        }
+        return ResponseEntity.ok(req.stream().map(this::batchItem).toList());
     }
 
-    public record BatchRequest(String skin, int seed, String phase) {}
+    /** Один элемент батча: битый элемент (нет skin/seed, seed вне 0..1000) не роняет остальные. */
+    private Map<String, Object> batchItem(BatchRequest r) {
+        if (r == null || r.skin() == null || r.skin().isBlank()
+                || r.seed() == null || r.seed() < 0 || r.seed() > 1000) {
+            Map<String, Object> bad = new java.util.HashMap<>();
+            bad.put("skin", r != null ? r.skin() : null);
+            bad.put("seed", r != null ? r.seed() : null);
+            bad.put("hasFeatures", false);
+            return bad;
+        }
+        var opt = service.getInfo(r.skin(), r.seed(), r.phase());
+        if (opt.isEmpty()) {
+            Map<String, Object> none = new java.util.HashMap<>(
+                    Map.of("skin", r.skin(), "seed", r.seed(), "hasFeatures", false));
+            if (r.phase() != null) none.put("phase", r.phase());
+            return none;
+        }
+        PatternInfo pi = opt.get();
+        Map<String, Object> mm = new java.util.HashMap<>();
+        mm.put("skin", pi.skin());
+        mm.put("seed", pi.seed());
+        if (r.phase() != null) mm.put("phase", r.phase());
+        mm.put("category", pi.category());
+        mm.put("categoryLabel", pi.categoryLabel());
+        mm.put("categoryLabelRu", pi.categoryLabelRu());
+        if (pi.percentage() != null) mm.put("percentage", pi.percentage());
+        mm.put("tier", pi.tier());
+        mm.put("rank", pi.rank());
+        mm.put("isBest", pi.isBest());
+        mm.put("displayName", pi.displayName());
+        mm.put("hasFeatures", true);
+        return mm;
+    }
+
+    private static final int BATCH_LIMIT = 500;
+
+    public record BatchRequest(String skin, Integer seed, String phase) {}
 
     private static String decode(String s) {
         try {

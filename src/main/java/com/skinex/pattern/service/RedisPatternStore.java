@@ -6,11 +6,15 @@ import com.skinex.pattern.model.SkinPatterns;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -147,24 +151,60 @@ public class RedisPatternStore {
         }
     }
 
-    /** Полная заливка из реестра */
+    /** Полная заливка из реестра; после неё подчищает ключи удалённых сидов/скинов. */
     public int fillAll(PatternRegistry registry) {
         int count = 0;
+        Set<String> live = new HashSet<>();
         for (Map.Entry<String, Map<Integer, List<PatternInfo>>> e : registry.snapshotIndex().entrySet()) {
             for (List<PatternInfo> infos : e.getValue().values()) {
                 // один ключ на (skin, seed) — кладём первого кандидата (приоритет категорий)
                 if (!infos.isEmpty()) {
-                    putPatternInfo(infos.get(0));
+                    PatternInfo pi = infos.get(0);
+                    putPatternInfo(pi);
+                    live.add(keyInfo(pi.normalizedSkin(), pi.seed()));
                     count++;
                 }
             }
         }
         for (SkinPatterns sp : registry.allSkins()) {
             putSkin(sp);
+            live.add(keySkin(PatternRegistry.normalize(sp.marketHashName() != null ? sp.marketHashName() : sp.skin())));
         }
         putSkinsSet(registry.listSkinsNormalized());
         putVersion(String.valueOf(System.currentTimeMillis()));
-        log.info("Redis fill done: {} PatternInfo keys + {} skins", count, registry.allSkins().size());
+        int removed = deleteStale(live);
+        log.info("Redis fill done: {} PatternInfo keys + {} skins ({} stale keys removed)", count, registry.allSkins().size(), removed);
         return count;
+    }
+
+    /**
+     * Удаляет ключи {prefix}:info:* / {prefix}:skin:*, которых нет среди live.
+     * SCAN вместо KEYS — не блокирует Redis в проде; ошибки чистки не роняют заливку.
+     * Чистка после заливки (а не до) — живые ключи не мигают в окне reload.
+     */
+    private int deleteStale(Set<String> live) {
+        int removed = 0;
+        for (String match : List.of(prefix + ":info:*", prefix + ":skin:*")) {
+            try (Cursor<String> cursor = redis.scan(ScanOptions.scanOptions().match(match).count(500).build())) {
+                List<String> batch = new ArrayList<>(500);
+                while (cursor.hasNext()) {
+                    String key = cursor.next();
+                    if (live.contains(key)) continue;
+                    batch.add(key);
+                    if (batch.size() >= 500) {
+                        redis.delete(batch);
+                        removed += batch.size();
+                        batch.clear();
+                    }
+                }
+                if (!batch.isEmpty()) {
+                    redis.delete(batch);
+                    removed += batch.size();
+                }
+            } catch (Exception e) {
+                log.warn("Redis stale cleanup failed for {}: {}", match, e.getMessage());
+            }
+        }
+        return removed;
     }
 }
