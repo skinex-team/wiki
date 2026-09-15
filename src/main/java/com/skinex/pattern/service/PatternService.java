@@ -87,18 +87,22 @@ public class PatternService {
     }
 
     /** Гем-категории допплеров: соответствуют фазам Ruby/Sapphire/Black Pearl/Emerald. */
+    private static final String RUBY = "ruby";
+    private static final String SAPPHIRE = "sapphire";
+    private static final String BLACK_PEARL = "black_pearl";
+    private static final String EMERALD = "emerald";
     private static final java.util.Set<String> GEM_CATEGORIES = java.util.Set.of(
-            "ruby", "sapphire", "black_pearl", "emerald");
+            RUBY, SAPPHIRE, BLACK_PEARL, EMERALD);
 
     /** Фаза-гем ("Ruby" -> ruby, "Black Pearl" -> black_pearl); для обычных фаз — null. */
     private static String gemCategory(String phase) {
         if (phase == null) return null;
         String p = phase.trim().toLowerCase();
         return switch (p) {
-            case "ruby" -> "ruby";
-            case "sapphire" -> "sapphire";
-            case "black pearl" -> "black_pearl";
-            case "emerald" -> "emerald";
+            case "ruby" -> RUBY;
+            case "sapphire" -> SAPPHIRE;
+            case "black pearl" -> BLACK_PEARL;
+            case "emerald" -> EMERALD;
             default -> null;
         };
     }
@@ -115,18 +119,23 @@ public class PatternService {
         if (pn == null && gem == null) return candidates.get(0);
         PatternInfo generic = null;
         for (PatternInfo pi : candidates) {
-            Integer s = phaseSuffix(pi.category());
-            if (s != null) {
-                if (pn != null && s.equals(pn)) return pi;
-                continue;
-            }
-            if (GEM_CATEGORIES.contains(pi.category())) {
-                if (gem != null && gem.equals(pi.category())) return pi;
-                continue;
-            }
-            if (generic == null) generic = pi;
+            if (matchesPhase(pi, pn, gem)) return pi;
+            if (generic == null && isGeneric(pi)) generic = pi;
         }
         return generic;
+    }
+
+    /** Кандидат подходит под фазу: нумерованная — только её _pN, гем — только его категория. */
+    private static boolean matchesPhase(PatternInfo pi, Integer pn, String gem) {
+        Integer s = phaseSuffix(pi.category());
+        if (s != null) return pn != null && s.equals(pn);
+        if (GEM_CATEGORIES.contains(pi.category())) return gem != null && gem.equals(pi.category());
+        return false;
+    }
+
+    /** Категория без привязки к фазе — fallback, когда под фазу ничего не подошло. */
+    private static boolean isGeneric(PatternInfo pi) {
+        return phaseSuffix(pi.category()) == null && !GEM_CATEGORIES.contains(pi.category());
     }
 
     /** Для скинов без особенностей вернет empty — фронт НЕ показывает тултип */

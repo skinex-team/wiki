@@ -13,6 +13,9 @@ import java.util.Map;
 @RequestMapping("/api/patterns")
 public class PatternController {
 
+    private static final String ERROR_KEY = "error";
+    private static final String HAS_FEATURES_KEY = "hasFeatures";
+
     private final PatternService service;
 
     public PatternController(PatternService service) {
@@ -48,7 +51,7 @@ public class PatternController {
                                  @RequestParam(value = "float", required = false) Double floatValue,
                                  @RequestParam(value = "phase", required = false) String phase) {
         if (skin == null || skin.isBlank() || seed == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "skin and seed required"));
+            return ResponseEntity.badRequest().body(Map.of(ERROR_KEY, "skin and seed required"));
         }
         var infoOpt = service.getInfo(skin, seed, phase);
         if (infoOpt.isEmpty()) {
@@ -73,7 +76,7 @@ public class PatternController {
             m.put("description", pi.description() != null ? pi.description() : "");
             m.put("floatValue", floatValue);
             m.put("floatHint", floatHint);
-            m.put("hasFeatures", true);
+            m.put(HAS_FEATURES_KEY, true);
             return ResponseEntity.ok(m);
         }
         return ResponseEntity.ok(pi);
@@ -83,17 +86,17 @@ public class PatternController {
     @GetMapping("/has-features")
     public Map<String, Object> hasFeatures(@RequestParam("skin") String skin) {
         boolean has = service.hasFeatures(skin);
-        return Map.of("skin", skin, "hasFeatures", has);
+        return Map.of("skin", skin, HAS_FEATURES_KEY, has);
     }
 
     /** Батч: POST /api/patterns/batch  body: [{skin, seed}, ...] -> [{skin, seed, info|null}, ...] */
     @PostMapping("/batch")
     public ResponseEntity<?> batch(@RequestBody(required = false) List<BatchRequest> req) {
         if (req == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "batch body required"));
+            return ResponseEntity.badRequest().body(Map.of(ERROR_KEY, "batch body required"));
         }
         if (req.size() > BATCH_LIMIT) {
-            return ResponseEntity.badRequest().body(Map.of("error", "batch too large: max " + BATCH_LIMIT));
+            return ResponseEntity.badRequest().body(Map.of(ERROR_KEY, "batch too large: max " + BATCH_LIMIT));
         }
         return ResponseEntity.ok(req.stream().map(this::batchItem).toList());
     }
@@ -105,13 +108,13 @@ public class PatternController {
             Map<String, Object> bad = new java.util.HashMap<>();
             bad.put("skin", r != null ? r.skin() : null);
             bad.put("seed", r != null ? r.seed() : null);
-            bad.put("hasFeatures", false);
+            bad.put(HAS_FEATURES_KEY, false);
             return bad;
         }
         var opt = service.getInfo(r.skin(), r.seed(), r.phase());
         if (opt.isEmpty()) {
             Map<String, Object> none = new java.util.HashMap<>(
-                    Map.of("skin", r.skin(), "seed", r.seed(), "hasFeatures", false));
+                    Map.of("skin", r.skin(), "seed", r.seed(), HAS_FEATURES_KEY, false));
             if (r.phase() != null) none.put("phase", r.phase());
             return none;
         }
@@ -128,7 +131,7 @@ public class PatternController {
         mm.put("rank", pi.rank());
         mm.put("isBest", pi.isBest());
         mm.put("displayName", pi.displayName());
-        mm.put("hasFeatures", true);
+        mm.put(HAS_FEATURES_KEY, true);
         return mm;
     }
 

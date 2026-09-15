@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import jakarta.annotation.PostConstruct;
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * In-memory реестр всех скинов с редкими паттернами.
@@ -22,6 +23,8 @@ import java.util.*;
 public class PatternRegistry {
 
     private static final Logger log = LoggerFactory.getLogger(PatternRegistry.class);
+
+    private static final String PINK_DUST = "pink_dust";
 
     private final ObjectMapper mapper;
 
@@ -39,7 +42,8 @@ public class PatternRegistry {
                                  Map<String, Map<Integer, List<PatternInfo>>> index,
                                  List<String> skinList) {}
 
-    private volatile RegistryState state = new RegistryState(Map.of(), Map.of(), List.of());
+    private final AtomicReference<RegistryState> state =
+            new AtomicReference<>(new RegistryState(Map.of(), Map.of(), List.of()));
 
     public PatternRegistry(ObjectMapper mapper) {
         this.mapper = mapper;
@@ -59,7 +63,7 @@ public class PatternRegistry {
      * Битый/невалидный файл не роняет загрузку остальных: логируем WARNING и пропускаем.
      */
     synchronized int loadAll(String locationPattern) {
-        // Строим новое состояние локально и публикуем одной volatile-записью в конце:
+        // Строим новое состояние локально и публикуем одной атомарной записью в конце:
         // в окне reload читатели продолжают видеть предыдущее состояние целиком.
         Map<String, SkinPatterns> newSkins = new HashMap<>();
         Map<String, Map<Integer, List<PatternInfo>>> newIndex = new HashMap<>();
@@ -95,12 +99,12 @@ public class PatternRegistry {
         }
         Map<String, Map<Integer, List<PatternInfo>>> immutableIndex = new HashMap<>();
         newIndex.forEach((k, v) -> immutableIndex.put(k, Collections.unmodifiableMap(v)));
-        state = new RegistryState(
+        state.set(new RegistryState(
                 Collections.unmodifiableMap(newSkins),
                 Collections.unmodifiableMap(immutableIndex),
-                List.copyOf(new TreeSet<>(newSkins.keySet())));
+                List.copyOf(new TreeSet<>(newSkins.keySet()))));
         // Также добавляем исходные marketHashName для удобства
-        log.info("PatternRegistry loaded {} skins: {}", newSkins.size(), state.skinList());
+        log.info("PatternRegistry loaded {} skins: {}", newSkins.size(), state.get().skinList());
         // Сводка покрытия: сколько файлов/скинов/сидов реально в индексе
         log.info("PatternRegistry load summary: files loaded={}, skins indexed={}, total seeds indexed={}, files skipped={}",
                 files, newSkins.size(), totalIndexedSeeds(), skipped);
@@ -232,7 +236,7 @@ public class PatternRegistry {
             indexCategory(bySeed, sp, norm, catKey, label, labelRu, percentage, desc, bestSet, cd.tier10(), 10, 10);
             // pink_gem all_desc уже разобран, но там нет tier-полей — считаем tier=1
             // pink_dust — без tier
-            if ("pink_dust".equals(catKey) && cd.all() != null) {
+            if (PINK_DUST.equals(catKey) && cd.all() != null) {
                 // уже покрыто
             }
         }
@@ -253,10 +257,10 @@ public class PatternRegistry {
             boolean isBest = bestSet.contains(seed);
             int rank = i + 1;
             // Для tier1..4 rank внутри тира тоже по порядку
-            Integer t = explicitTier != null ? explicitTier : (tier == 1 && seeds.size() > 0 && !catKey.equals("pink_gem") && !catKey.equals("pink_dust") ? tier : (catKey.equals("pink_gem") || catKey.equals("pink_dust") ? 1 : tier));
+            Integer t = explicitTier != null ? explicitTier : (tier == 1 && seeds.size() > 0 && !catKey.equals("pink_gem") && !catKey.equals(PINK_DUST) ? tier : (catKey.equals("pink_gem") || catKey.equals(PINK_DUST) ? 1 : tier));
             // pink_gem all_desc содержит best в начале — rank уже правильный
             String displayName;
-            if ("pink_dust".equals(catKey)) {
+            if (PINK_DUST.equals(catKey)) {
                 displayName = label + " (common)";
             } else if (percentage != null && !percentage.isBlank() && catKey.contains("fade")) {
                 if (isBest) displayName = percentage + " Fade ★ Best #" + seed;
@@ -290,7 +294,7 @@ public class PatternRegistry {
     public Optional<PatternInfo> get(String marketHashName, int seed) {
         if (marketHashName == null) return Optional.empty();
         String norm = normalize(marketHashName);
-        Map<Integer, List<PatternInfo>> m = state.index().get(norm);
+        Map<Integer, List<PatternInfo>> m = state.get().index().get(norm);
         if (m == null) return Optional.empty();
         List<PatternInfo> l = m.get(seed);
         return l == null || l.isEmpty() ? Optional.empty() : Optional.of(l.get(0));
@@ -299,7 +303,7 @@ public class PatternRegistry {
     /** Все категории для (skin, seed) по приоритету — для выбора по фазе предмета. */
     public List<PatternInfo> getCandidates(String marketHashName, int seed) {
         if (marketHashName == null) return List.of();
-        Map<Integer, List<PatternInfo>> m = state.index().get(normalize(marketHashName));
+        Map<Integer, List<PatternInfo>> m = state.get().index().get(normalize(marketHashName));
         if (m == null) return List.of();
         List<PatternInfo> l = m.get(seed);
         return l == null ? List.of() : Collections.unmodifiableList(l);
@@ -307,20 +311,20 @@ public class PatternRegistry {
 
     public Optional<SkinPatterns> getSkin(String marketHashName) {
         if (marketHashName == null) return Optional.empty();
-        return Optional.ofNullable(state.skinsByNormalized().get(normalize(marketHashName)));
+        return Optional.ofNullable(state.get().skinsByNormalized().get(normalize(marketHashName)));
     }
 
     public List<String> listSkinsNormalized() {
-        return state.skinList();
+        return state.get().skinList();
     }
 
     public Collection<SkinPatterns> allSkins() {
-        return state.skinsByNormalized().values();
+        return state.get().skinsByNormalized().values();
     }
 
     /** Текущий индекс (уже immutable, копия не нужна) — для заливки в Redis. */
     public Map<String, Map<Integer, List<PatternInfo>>> snapshotIndex() {
-        return state.index();
+        return state.get().index();
     }
 
     /**
@@ -338,6 +342,6 @@ public class PatternRegistry {
     }
 
     public int totalIndexedSeeds() {
-        return state.index().values().stream().mapToInt(Map::size).sum();
+        return state.get().index().values().stream().mapToInt(Map::size).sum();
     }
 }
