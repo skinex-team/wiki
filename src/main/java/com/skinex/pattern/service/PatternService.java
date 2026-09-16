@@ -90,6 +90,8 @@ public class PatternService {
     private static final String RUBY = "ruby";
     private static final String SAPPHIRE = "sapphire";
     private static final String BLACK_PEARL = "black_pearl";
+    /** Лейбл фазы Black Pearl в данных предмета (с пробелом, в отличие от категории). */
+    private static final String BLACK_PEARL_LABEL = "black pearl";
     private static final String EMERALD = "emerald";
     private static final java.util.Set<String> GEM_CATEGORIES = java.util.Set.of(
             RUBY, SAPPHIRE, BLACK_PEARL, EMERALD);
@@ -99,10 +101,10 @@ public class PatternService {
         if (phase == null) return null;
         String p = phase.trim().toLowerCase();
         return switch (p) {
-            case "ruby" -> RUBY;
-            case "sapphire" -> SAPPHIRE;
-            case "black pearl" -> BLACK_PEARL;
-            case "emerald" -> EMERALD;
+            case RUBY -> RUBY;
+            case SAPPHIRE -> SAPPHIRE;
+            case BLACK_PEARL_LABEL -> BLACK_PEARL;
+            case EMERALD -> EMERALD;
             default -> null;
         };
     }
