@@ -55,12 +55,12 @@ GetPatternInfo, HasFeatures, ListSkins, GetSkinPatterns
 ## Деплой
 - `skinex-ci/k8s/base/services/wiki.yaml` + `ingress.yaml` (`/api/patterns`, `/api/admin/patterns` → service `wiki:8091`)
 - `skinex-ci/k8s/base/configmap-common-env.yaml` + `overlays/prod/configmap-common-env.env` добавляют `WIKI_GRPC=static://wiki:9091`
-- `frontend/Jenkinsfile` + `Dockerfile` добавляют `NEXT_PUBLIC_PATTERN_SERVICE_URL`
+- `frontend/Dockerfile` добавляет `NEXT_PUBLIC_PATTERN_SERVICE_URL`
 - Порты: REST 8091, gRPC 9091
 
 ## Build & Test
 ```
 ./gradlew test
 ./gradlew bootJar
-docker build -t registry.gitlab.com/skinex-team/wiki:latest .
+docker build -t ghcr.io/skinex-team/wiki:latest .
 ```
