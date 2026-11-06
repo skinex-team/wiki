@@ -1,0 +1,80 @@
+{
+  "skin": "SSG 08 | Acid Fade",
+  "marketHashName": "SSG 08 | Acid Fade",
+  "normalizedName": "ssg 08 | acid fade",
+  "source": "steamcommunity korenevskiy guides [3304751006]",
+  "author": "korenevskiy guide parser",
+  "updated": "2026-10-31",
+  "categories": {
+    "full_fade": {
+      "label": "Full Fade",
+      "labelRu": "",
+      "description": "",
+      "tier1": [
+        576
+      ],
+      "tier2": [
+        575
+      ],
+      "tier3": [
+        897
+      ],
+      "tier4": [
+        897
+      ],
+      "tier5": [
+        468
+      ],
+      "tier6": [
+        961
+      ],
+      "tier7": [
+        550
+      ],
+      "tier8": [
+        107
+      ],
+      "tier9": [
+        807
+      ],
+      "tier10": [
+        80
+      ]
+    },
+    "black_pearls": {
+      "label": "Black Pearls",
+      "labelRu": "",
+      "description": "",
+      "tier1": [
+        182
+      ],
+      "tier2": [
+        522
+      ],
+      "tier3": [
+        230
+      ],
+      "tier4": [
+        761
+      ],
+      "tier5": [
+        780
+      ],
+      "tier6": [
+        803
+      ],
+      "tier7": [
+        178
+      ],
+      "tier8": [
+        444
+      ],
+      "tier9": [
+        206
+      ],
+      "tier10": [
+        773
+      ]
+    }
+  }
+}

@@ -206,4 +206,28 @@ class PatternRegistryValidationTest {
         assertTrue(fadeChecked > 10, "fadeChecked=" + fadeChecked);
         assertTrue(dopplerChecked > 10, "dopplerChecked=" + dopplerChecked);
     }
+
+    @Test
+    void addedGuideResourcesExposeVerifiedSeedCategories() {
+        PatternRegistry reg = loadReal();
+
+        assertEquals("emerald", reg.get("★ Bayonet | Gamma Doppler", 273).orElseThrow().category());
+        assertEquals("max_blue_p3", reg.get("★ Falchion Knife | Doppler", 18).orElseThrow().category());
+        assertEquals("max_green_pattern_p2", reg.get("★ Huntsman Knife | Gamma Doppler", 7).orElseThrow().category());
+        assertEquals("max_lime_tip_p4", reg.get("★ M9 Bayonet | Gamma Doppler", 6).orElseThrow().category());
+        assertEquals("max_blue_tip_p1", reg.get("★ Skeleton Knife | Doppler", 359).orElseThrow().category());
+        assertEquals("full_fade", reg.get("SSG 08 | Acid Fade", 576).orElseThrow().category());
+        assertEquals("max_pink_tip_p1", reg.get("★ Survival Knife | Doppler", 18).orElseThrow().category());
+    }
+
+    @Test
+    void fadeTierUsesExactPercentageBoundaries() {
+        assertEquals(1, FadePercentageService.tierForFade(100.0));
+        assertEquals(1, FadePercentageService.tierForFade(99.9));
+        assertEquals(2, FadePercentageService.tierForFade(99.89));
+        assertEquals(2, FadePercentageService.tierForFade(96.0));
+        assertEquals(3, FadePercentageService.tierForFade(95.99));
+        assertEquals(3, FadePercentageService.tierForFade(90.0));
+        assertEquals(4, FadePercentageService.tierForFade(89.99));
+    }
 }
